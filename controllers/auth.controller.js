@@ -7,9 +7,9 @@ exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
     const existingUser = await userModel.findOne({
-      where: { email }
+      where: {email}
     });
-
+    
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -37,13 +37,11 @@ exports.register = async (req, res) => {
   }
 };
 
-
 exports.login = async (req, res) => {
   try {
     let dataLogin = {
       email: req.body.email
     };
-
     let dataUser = await userModel.findOne({
       where: dataLogin
     });
