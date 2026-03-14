@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
 const userModel = require("../models/index").user
-const secret = process.env.JWT_SECRET || "simpanin"
+const secret = "simpanin"
 
 exports.register = async (request, result) => {
   try {
