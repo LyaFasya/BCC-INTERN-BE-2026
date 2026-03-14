@@ -1,17 +1,17 @@
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const userModel = require("../models/index").user;
-const secret = process.env.JWT_SECRET || "simpanin";
+const jwt = require("jsonwebtoken")
+const bcrypt = require("bcryptjs")
+const userModel = require("../models/index").user
+const secret = process.env.JWT_SECRET || "simpanin"
 
-exports.register = async (req, res) => {
+exports.register = async (request, result) => {
   try {
-    const { email, password } = req.body;
+    const {email, password} = request.body;
     const existingUser = await userModel.findOne({
       where: {email}
     });
     
     if (existingUser) {
-      return res.status(400).json({
+      return result.status(400).json({
         success: false,
         message: "Email already registered"
       });
@@ -23,31 +23,31 @@ exports.register = async (req, res) => {
       password: hashedPassword
     });
 
-    return res.status(201).json({
+    return result.status(201).json({
       success: true,
       message: "Register Success",
       data: user
     });
 
   } catch (error) {
-    return res.status(500).json({
+    return result.status(500).json({
       success: false,
       message: error.message
     });
   }
 };
 
-exports.login = async (req, res) => {
+exports.login = async (request, result) => {
   try {
     let dataLogin = {
-      email: req.body.email
+      email: request.body.email
     };
     let dataUser = await userModel.findOne({
       where: dataLogin
     });
 
     if (!dataUser) {
-      return res.status(404).json({
+      return result.status(404).json({
         success: false,
         logged: false,
         message: "Authentication Failed. Email not found"
@@ -55,12 +55,12 @@ exports.login = async (req, res) => {
     }
 
     const validPassword = await bcrypt.compare(
-      req.body.password,
+      request.body.password,
       dataUser.password
     );
 
     if (!validPassword) {
-      return res.status(401).json({
+      return result.status(401).json({
         success: false,
         logged: false,
         message: "Authentication Failed. Invalid password"
@@ -76,7 +76,7 @@ exports.login = async (req, res) => {
       expiresIn: "1d"
     });
 
-    return res.json({
+    return result.json({
       success: true,
       logged: true,
       message: "Authentication Success",
@@ -84,7 +84,7 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
-    return res.status(500).json({
+    return result.status(500).json({
       success: false,
       message: error.message
     });
