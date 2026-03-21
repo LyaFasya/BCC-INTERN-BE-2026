@@ -1,22 +1,9 @@
-<<<<<<< HEAD
-=======
-const express = require("express")
-const app = express()
-const PORT = process.env.PORT || 8000
-const authRoutes = require('./routes/auth.route')
-
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-app.use('/auth', authRoutes)
-
-module.exports = app
-
->>>>>>> e488ac371c83fd7fb23b193127ab37d54fb09680
 require("dotenv").config()
 
 const express = require("express")
 const app = express()
 const PORT = process.env.PORT || 8000
+
 const authRoutes = require("./routes/auth.route")
 const profileRoutes = require("./routes/userProfile.route")
 const userRoutes = require("./routes/user.route")
@@ -24,8 +11,8 @@ const categoryRoutes = require("./routes/foodCategory.route")
 // const foodRoutes = require("./routes/food.route")
 
 const createAdmin = require("./utils/createAdmin")
-const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("./swagger");
+const swaggerUi = require("swagger-ui-express")
+const swaggerSpec = require("./swagger")
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -37,9 +24,10 @@ app.use("/users", userRoutes)
 app.use("/category", categoryRoutes)
 // app.use("/food", foodRoutes)
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 createAdmin()
+
 app.listen(PORT, () => {
   console.log(`Server of Simpanin.id runs on port ${PORT}`)
 })
