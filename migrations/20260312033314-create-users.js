@@ -23,7 +23,7 @@ module.exports = {
         allowNull: false,
         defaultValue: 'user'
       },
-      refreshToken: {
+      refresh_token: {
         type: Sequelize.TEXT,
         allowNull: true
       },
@@ -40,7 +40,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_role";')
     await queryInterface.dropTable('users');
   }
 };

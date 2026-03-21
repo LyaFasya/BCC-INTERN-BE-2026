@@ -40,8 +40,9 @@ exports.register = async (request, response) => {
 
 exports.login = async (request, response) => {
   try {
+    const { email, password } = request.body
     const dataUser = await userModel.findOne({
-      where: { email: request.body.email }
+      where: { email }
     })
     if (!dataUser) {
       return response.status(404).json({
@@ -50,10 +51,7 @@ exports.login = async (request, response) => {
       })
     }
 
-    const validPassword = await bcrypt.compare(
-      request.body.password,
-      dataUser.password
-    )
+    const validPassword = await bcrypt.compare(password, dataUser.password)
     if (!validPassword) {
       return response.status(401).json({
         success: false,
@@ -73,24 +71,21 @@ exports.login = async (request, response) => {
       expiresIn: "7d"
     })
 
-    await userModel.update(
-      { refreshToken },
-      { where: { id: dataUser.id } }
-    )
-
+    await dataUser.update({ refreshToken })
     response.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, 
-      sameSite: "strict",
+      secure: false, // bisa diubah true kalo pake HTTPS
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
 
-    const { password, ...userWithoutPassword } = dataUser.toJSON()
-    return response.json({
+    const { password: _, refreshToken: __, ...userApprove } =
+      dataUser.toJSON()
+    return response.status(200).json({
       success: true,
       message: "Login success",
-      accessToken,
-      data: userWithoutPassword
+      data: userApprove,
+      accessToken
     })
 
   } catch (error) {

@@ -14,6 +14,9 @@ const createAdmin = require("./utils/createAdmin")
 const swaggerUi = require("swagger-ui-express")
 const swaggerSpec = require("./swagger")
 
+const cookieParser = require("cookie-parser")
+app.use(cookieParser())
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use("/image", express.static("image"))

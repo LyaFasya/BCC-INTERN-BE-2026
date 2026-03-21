@@ -44,8 +44,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     refreshToken: {
       type: DataTypes.TEXT,
-      allowNull: true
-    }
+      allowNull: true,
+      field: "refresh_token"
+    },
   }, {
     sequelize,
     modelName: 'user',

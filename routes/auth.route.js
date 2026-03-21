@@ -46,13 +46,19 @@ router.post("/register", authController.register);
  *   post:
  *     summary: Login user
  *     tags: [Auth]
+ *     description: |
+ *       Login user dan akan:
+ *       - Mengembalikan accessToken
+ *       - Menyimpan refreshToken di cookie (httpOnly)
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email, password]
+ *             required:
+ *               - email
+ *               - password
  *             properties:
  *               email:
  *                 type: string
@@ -62,7 +68,12 @@ router.post("/register", authController.register);
  *                 example: 123456
  *     responses:
  *       200:
- *         description: Authentication Success
+ *         description: Login success
+ *         headers:
+ *           Set-Cookie:
+ *             description: Refresh token stored in cookie
+ *             schema:
+ *               type: string
  *         content:
  *           application/json:
  *             schema:
@@ -70,11 +81,9 @@ router.post("/register", authController.register);
  *               properties:
  *                 success:
  *                   type: boolean
- *                 logged:
- *                   type: boolean
  *                 message:
  *                   type: string
- *                 token:
+ *                 accessToken:
  *                   type: string
  *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *       401:
@@ -85,6 +94,36 @@ router.post("/register", authController.register);
  *         description: Server error
  */
 router.post("/login", authController.login);
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Get new access token
+ *     tags: [Auth]
+ *     description: Menggunakan refresh token dari cookie
+ *     responses:
+ *       200:
+ *         description: New access token generated
+ *       401:
+ *         description: No token
+ *       403:
+ *         description: Invalid token
+ */
+router.post("/refresh", authController.refreshToken);
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Auth]
+ *     description: Menghapus refresh token dari cookie dan database
+ *     responses:
+ *       200:
+ *         description: Logout success
+ */
+router.post("/logout", authController.logout);
 
 /**
  * @swagger
