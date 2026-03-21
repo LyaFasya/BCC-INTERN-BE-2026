@@ -1,5 +1,4 @@
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('foods', {
@@ -9,52 +8,70 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      userId: {
+      user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
           model: "users",
           key: "id"
-        }
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE"
       },
-      foodCategoryId: {
+      food_category_id: {
         type: Sequelize.INTEGER,
         references: {
           model: "food_categories",
           key: "id"
-        }
+        },
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL"
       },
-      foodName: {
+      food_name: {
         type: Sequelize.STRING,
         allowNull: false
       },
-      initialWeight: {
+      initial_weight: {
         type: Sequelize.FLOAT,
         allowNull: false
       },
-      currentWeight: {
+      current_weight: {
         type: Sequelize.FLOAT,
         allowNull: false
       },
-      unitOfWeight: {
-        type: Sequelize.STRING,
+      unit_of_weight: {
+        type: Sequelize.ENUM(
+          'kg',
+          'gr',
+          'butir',
+          'ikat',
+          'buah',
+          'siung',
+          'ruas',
+          'liter',
+          'ml'
+        ),
         allowNull: false
       },
-      storageLocation: {
-        type: Sequelize.STRING,
+      storage_location: {
+        type: Sequelize.ENUM(
+          'freezer',
+          'refrigerator',
+          'room_temperature'
+        ),
         allowNull: false
       },
-      purchaseDate: {
+      purchase_date: {
         type: Sequelize.DATE,
         allowNull: false
       },
-      expiryDate: {
+      expiry_date: {
         type: Sequelize.DATE
       },
       price: {
         type: Sequelize.DECIMAL
       },
-      priceOfUnit: {
+      price_of_unit: {
         type: Sequelize.DECIMAL
       },
       status: {
@@ -66,19 +83,19 @@ module.exports = {
         ),
         defaultValue: 'fresh'
       },
-      createdAt: {
+      created_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
       },
-      updatedAt: {
+      updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
       }
     });
   },
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable('foods');
   }
 };

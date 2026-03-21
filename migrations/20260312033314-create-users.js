@@ -1,5 +1,5 @@
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('users', {
@@ -23,12 +23,16 @@ module.exports = {
         allowNull: false,
         defaultValue: 'user'
       },
-      createdAt: {
+      refreshToken: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
+      created_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
       },
-      updatedAt: {
+      updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
@@ -36,6 +40,7 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_role";')
     await queryInterface.dropTable('users');
   }
 };

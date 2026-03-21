@@ -4,11 +4,6 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class foodCategory extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
        foodCategory.hasMany(models.food, {
         foreignKey: 'foodCategoryId'
@@ -16,19 +11,26 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   foodCategory.init({
-    id:{
+    id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER
     },
-    categoryName: DataTypes.STRING,
-    categoryProfile: DataTypes.STRING,
+    categoryName: {
+      type: DataTypes.STRING,
+      field: "category_name"
+    },
+    categoryProfile: {
+      type: DataTypes.STRING,
+      field: "category_profile"
+    },
     description: DataTypes.TEXT
   }, {
     sequelize,
     modelName: 'foodCategory',
-    tableName: 'food_categories'
+    tableName: 'food_categories',
+    underscored: true
   });
   return foodCategory;
 };

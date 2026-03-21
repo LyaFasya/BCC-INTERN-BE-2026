@@ -4,34 +4,40 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class userProfile extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
       userProfile.belongsTo(models.user, {
-        foreignKey: 'userId'
+        foreignKey: 'userId',
+        onDelete: 'CASCADE'
       });
     }
   }
   userProfile.init({
-    id:{
+    id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER
     },
-    userId: DataTypes.INTEGER,
+    userId: {
+      type: DataTypes.INTEGER,
+      field: "user_id"
+    },
     name: DataTypes.STRING,
-    phoneNumber: DataTypes.STRING,
+    phoneNumber: {
+      type: DataTypes.STRING,
+      field: "phone_number"
+    },
     address: DataTypes.TEXT,
-    profilePicture: DataTypes.STRING,
+    profilePicture: {
+      type: DataTypes.STRING,
+      field: "profile_picture"
+    },
     gender: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'userProfile',
-    tableName: 'user_profiles'
+    tableName: 'user_profiles',
+    underscored: true
   });
   return userProfile;
 };
