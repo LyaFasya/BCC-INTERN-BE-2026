@@ -1,8 +1,7 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authController = require("../controllers/auth.controller");
-const auth = require("../middlewares/auth");
-
+import authController from "../controllers/auth.controller.js";
+import auth from "../middlewares/auth.js";
 /**
  * @swagger
  * tags:
@@ -162,4 +161,4 @@ router.post("/logout", authController.logout);
  */
 router.put("/update-password", auth, authController.updatePassword);
 
-module.exports = router;
+export default router;

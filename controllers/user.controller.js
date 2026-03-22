@@ -1,7 +1,8 @@
-const userModel = require(`../models/index`).user
-const Op = require(`sequelize`).Op
+import db from "../models/index.js"
+import { Op } from "sequelize"
+const userModel = db.user
 
-exports.getAllUser = async (request, response) => {
+const getAllUser = async (request, response) => {
   try {
     const currentUserId = request.user.id
     const users = await userModel.findAll({
@@ -28,7 +29,7 @@ exports.getAllUser = async (request, response) => {
   }
 }
 
-exports.getMe = async (request, response) => {
+const getMe = async (request, response) => {
   try {
     const user = await userModel.findByPk(request.user.id, {
       attributes: ["email"]
@@ -54,7 +55,7 @@ exports.getMe = async (request, response) => {
   }
 }
 
-exports.deleteMyAccount = async (request, response) => {
+const deleteMyAccount = async (request, response) => {
   try {
     await userModel.destroy({
       where: { id: request.user.id }
@@ -72,3 +73,5 @@ exports.deleteMyAccount = async (request, response) => {
     })
   }
 }
+
+export default {getAllUser, getMe, deleteMyAccount}

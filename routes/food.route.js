@@ -1,8 +1,13 @@
-// const express = require("express");
-// const router = express.Router();
+import express from "express";
 
-// const foodController = require("../controllers/food.controller");
-// const auth = require("../middlewares/auth"); 
-// router.post("/", auth, foodController.createFood);
+const router = express.Router();
 
-// module.exports = router;
+import foodController from "../controllers/food.controller.js";
+import auth from "../middlewares/auth.js";
+
+router.use(auth);
+router.post("/", foodController.createFood);
+router.get("/", foodController.getAllFood);
+router.patch("/:id/use", foodController.updateFoodUsage);
+
+export default router;

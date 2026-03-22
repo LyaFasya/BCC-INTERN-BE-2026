@@ -1,11 +1,16 @@
-const userProfileModel = require("../models").userProfile
-const userModel = require("../models").user
-const fs = require("fs")
-const path = require("path")
-const { Op } = require("sequelize")
-const IMAGE_PATH = path.join(__dirname, "../image/profile")
+import db from "../models/index.js";
+import fs from "fs";
+import path from "path";
+import { Op } from "sequelize";
+import { fileURLToPath } from "url";
 
-exports.createProfile = async (request, response) => {
+const userProfileModel = db.userProfile;
+const userModel = db.user;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const IMAGE_PATH = path.join(__dirname, "../image/profile");
+
+const createProfile = async (request, response) => {
   try {
     const userId = request.user.id
     const existingProfile = await userProfileModel.findOne({
@@ -60,7 +65,7 @@ exports.createProfile = async (request, response) => {
   }
 }
 
-exports.updateProfile = async (request, response) => {
+const updateProfile = async (request, response) => {
   try {
     const userId = request.user.id
     const profile = await userProfileModel.findOne({
@@ -114,7 +119,7 @@ exports.updateProfile = async (request, response) => {
   }
 }
 
-exports.getAllProfile = async (request, response) => {
+const getAllProfile = async (request, response) => {
   try {
     const profiles = await userProfileModel.findAll({
       include: [
@@ -139,7 +144,7 @@ exports.getAllProfile = async (request, response) => {
   }
 }
 
-exports.getMyProfile = async (request, response) => {
+const getMyProfile = async (request, response) => {
   try {
     const profile = await userProfileModel.findOne({
       where: { userId: request.user.id }
@@ -163,7 +168,7 @@ exports.getMyProfile = async (request, response) => {
   }
 }
 
-exports.getProfileByKeyword = async (request, response) => {
+const getProfileByKeyword = async (request, response) => {
   try {
     const keyword = Object.keys(request.query)[0] || ""
     const profiles = await userProfileModel.findAll({
@@ -189,3 +194,5 @@ exports.getProfileByKeyword = async (request, response) => {
     })
   }
 }
+
+export default {createProfile, updateProfile, getAllProfile, getMyProfile, getProfileByKeyword,};

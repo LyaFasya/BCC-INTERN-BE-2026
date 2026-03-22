@@ -1,5 +1,4 @@
-'use strict';
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('foods', {
       id: {
@@ -79,7 +78,8 @@ module.exports = {
           'fresh',
           'warning',
           'expired',
-          'wasted'
+          'consumed',
+          'dicarded'
         ),
         defaultValue: 'fresh'
       },

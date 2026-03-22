@@ -1,8 +1,6 @@
-'use strict';
-const { 
-  Model 
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
+import { Model } from "sequelize";
+
+export default (sequelize, DataTypes) => {
   class food extends Model {
     static associate(models) {
       food.belongsTo(models.user, {
@@ -89,7 +87,7 @@ module.exports = (sequelize, DataTypes) => {
       field: "price_of_unit"
     },
     status: {
-      type: DataTypes.ENUM('fresh','warning','expired','wasted'),
+      type: DataTypes.ENUM('fresh','warning','expired','consumed','discarded'),
       defaultValue: 'fresh'
     }
   }, {

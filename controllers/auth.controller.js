@@ -1,12 +1,27 @@
-const jwt = require("jsonwebtoken")
-const bcrypt = require("bcryptjs")
-const userModel = require("../models/index").user
+import jwt from "jsonwebtoken"
+import bcrypt from "bcryptjs"
+import db from "../models/index.js"
+const userModel = db.user
 const access_secret = process.env.JWT_SECRET || "simpanin"
 const refresh_secret = process.env.JWT_REFRESH_SECRET || "simpanin_refresh"
 
-exports.register = async (request, response) => {
+const register = async (request, response) => {
   try {
-    const { email, password } = request.body
+
+    const { email, password, confirm_password } = request.body
+    if (password !== confirm_password) {
+      return response.status(400).json({
+        success: false,
+        message: "Password and confirm password do not match"
+      })
+    }
+    if (!password || password.length < 6 || !/[A-Z]/.test(password)) {
+      return response.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters and contain at least 1 uppercase letter"
+      })
+    }
+
     const existingUser = await userModel.findOne({
       where: { email }
     })
@@ -22,7 +37,6 @@ exports.register = async (request, response) => {
       email,
       password: hashedPassword
     })
-
     const { password: _, ...userWithoutPassword } = user.toJSON()
     return response.status(201).json({
       success: true,
@@ -38,7 +52,7 @@ exports.register = async (request, response) => {
   }
 }
 
-exports.login = async (request, response) => {
+const login = async (request, response) => {
   try {
     const { email, password } = request.body
     const dataUser = await userModel.findOne({
@@ -96,7 +110,7 @@ exports.login = async (request, response) => {
   }
 }
 
-exports.refreshToken = async (request, response) => {
+const refreshToken = async (request, response) => {
   try {
     const token = request.cookies.refreshToken
     if (!token) {
@@ -136,8 +150,7 @@ exports.refreshToken = async (request, response) => {
     })
   }
 }
-
-exports.logout = async (request, response) => {
+const logout = async (request, response) => {
   try {
     const token = request.cookies.refreshToken
     if (!token) return response.sendStatus(204)
@@ -160,7 +173,7 @@ exports.logout = async (request, response) => {
   }
 }
 
-exports.updatePassword = async (request, response) => {
+const updatePassword = async (request, response) => {
   try {
     const userId = request.user.id
     const { oldPassword, newPassword, confirmPassword } = request.body
@@ -227,3 +240,5 @@ exports.updatePassword = async (request, response) => {
     })
   }
 }
+
+export default {register, login, refreshToken, logout, updatePassword,}

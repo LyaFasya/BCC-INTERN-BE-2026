@@ -1,13 +1,18 @@
-const foodCategoryModel = require("../models").foodCategory
-const fs = require("fs")
-const path = require("path")
-const IMAGE_PATH = path.join(__dirname, "../image/category")
+import db from "../models/index.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-exports.createCategory = async (request, result) => {
+const foodCategoryModel = db.foodCategory;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const IMAGE_PATH = path.join(__dirname, "../image/category");
+
+const createCategory = async (request, response) => {
   try {
     const { category_name, description } = request.body
     if (!category_name) {
-      return result.status(400).json({
+      return response.status(400).json({
         success: false,
         message: "Category name is required"
       })
@@ -22,7 +27,7 @@ exports.createCategory = async (request, result) => {
     }
 
     const newCategory = await foodCategoryModel.create(data)
-    return result.status(201).json({
+    return response.status(201).json({
       success: true,
       message: "Category created",
       data: newCategory
@@ -33,14 +38,14 @@ exports.createCategory = async (request, result) => {
       const filePath = path.join(IMAGE_PATH, request.file.filename)
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
     }
-    return result.status(500).json({
+    return response.status(500).json({
       success: false,
       message: error.message
     })
   }
 }
 
-exports.getAllCategory = async (request, response) => {
+const getAllCategory = async (request, response) => {
   try {
     const data = await foodCategoryModel.findAll()
     return response.json({
@@ -56,11 +61,11 @@ exports.getAllCategory = async (request, response) => {
   }
 }
 
-exports.updateCategory = async (request, result) => {
+const updateCategory = async (request, response) => {
   try {
     const category = await foodCategoryModel.findByPk(request.params.id)
     if (!category) {
-      return result.status(404).json({
+      return response.status(404).json({
         success: false,
         message: "Category not found"
       })
@@ -86,7 +91,7 @@ exports.updateCategory = async (request, result) => {
     })
 
     const updated = await foodCategoryModel.findByPk(request.params.id)
-    return result.json({
+    return response.json({
       success: true,
       message: "Category updated",
       data: updated
@@ -98,18 +103,18 @@ exports.updateCategory = async (request, result) => {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
     }
 
-    return result.status(500).json({
+    return response.status(500).json({
       success: false,
       message: error.message
     })
   }
 }
 
-exports.deleteCategory = async (request, result) => {
+const deleteCategory = async (request, response) => {
   try {
     const category = await foodCategoryModel.findByPk(request.params.id)
     if (!category) {
-      return result.status(404).json({
+      return response.status(404).json({
         success: false,
         message: "Category not found"
       })
@@ -124,15 +129,17 @@ exports.deleteCategory = async (request, result) => {
       where: { id: request.params.id }
     })
 
-    return result.json({
+    return response.json({
       success: true,
       message: "Category deleted"
     })
 
   } catch (error) {
-    return result.status(500).json({
+    return response.status(500).json({
       success: false,
       message: error.message
     })
   }
 }
+
+export default {createCategory, getAllCategory, updateCategory, deleteCategory,};

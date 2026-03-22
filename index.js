@@ -1,38 +1,37 @@
-require("dotenv").config()
+import 'dotenv/config';
+import express from "express";
 
-const express = require("express")
-const app = express()
-const PORT = process.env.PORT || 8000
+import authRoutes from "./routes/auth.route.js";
+import profileRoutes from "./routes/userProfile.route.js";
+import userRoutes from "./routes/user.route.js";
+import categoryRoutes from "./routes/foodCategory.route.js";
+import foodRoutes from "./routes/food.route.js"
 
-const authRoutes = require("./routes/auth.route")
-const profileRoutes = require("./routes/userProfile.route")
-const userRoutes = require("./routes/user.route")
-const categoryRoutes = require("./routes/foodCategory.route")
-// const foodRoutes = require("./routes/food.route")
+import createAdmin from "./utils/createAdmin.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.js";
+import cookieParser from "cookie-parser";
 
-const createAdmin = require("./utils/createAdmin")
-const swaggerUi = require("swagger-ui-express")
-const swaggerSpec = require("./swagger")
+const app = express();
+const PORT = process.env.PORT || 8000;
 
-const cookieParser = require("cookie-parser")
-app.use(cookieParser())
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/image", express.static("image"));
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-app.use("/image", express.static("image"))
+app.use("/auth", authRoutes);
+app.use("/profile", profileRoutes);
+app.use("/users", userRoutes);
+app.use("/category", categoryRoutes);
+app.use("/food", foodRoutes);
 
-app.use("/auth", authRoutes)
-app.use("/profile", profileRoutes)
-app.use("/users", userRoutes)
-app.use("/category", categoryRoutes)
-// app.use("/food", foodRoutes)
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-
-createAdmin()
+createAdmin();
 
 app.listen(PORT, () => {
-  console.log(`Server of Simpanin.id runs on port ${PORT}`)
-})
+  console.log(`Server of Simpanin.id runs on port ${PORT}`);
+});
 
-module.exports = app
+export default app;

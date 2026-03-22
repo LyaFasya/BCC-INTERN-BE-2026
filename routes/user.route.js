@@ -1,9 +1,11 @@
-const express = require("express")
+import express from "express"
+
 const router = express.Router()
 
-const userController = require("../controllers/user.controller")
-const auth = require("../middlewares/auth")
-const checkRole = require("../middlewares/checkRole")
+import userController from "../controllers/user.controller.js"
+import auth from "../middlewares/auth.js"
+import checkRole from "../middlewares/checkRole.js"
+
 
 /**
  * @swagger
@@ -105,4 +107,4 @@ router.get("/me", auth, userController.getMe)
  */
 router.delete("/me", auth, userController.deleteMyAccount)
 
-module.exports = router
+export default router;

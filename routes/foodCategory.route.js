@@ -1,9 +1,11 @@
-const express = require("express");
+import express from "express";
+
 const router = express.Router();
-const category = require("../controllers/category.controller");
-const authenticate = require("../middlewares/auth");
-const checkRole = require("../middlewares/checkRole");
-const upload = require("../middlewares/uploadCategory");
+
+import category from "../controllers/category.controller.js";
+import authenticate from "../middlewares/auth.js";
+import checkRole from "../middlewares/checkRole.js";
+import upload from "../middlewares/uploadCategory.js";
 
 router.use(authenticate);
 
@@ -119,4 +121,4 @@ router.put("/:id", checkRole("admin"), upload.single("category_profile"), catego
  */
 router.delete("/:id", checkRole("admin"), category.deleteCategory);
 
-module.exports = router;
+export default router;

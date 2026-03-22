@@ -1,9 +1,12 @@
-const express = require("express");
-const router = express.Router();
-const userProfileController = require("../controllers/profile.controller");
-const auth = require("../middlewares/auth");
-const checkRole = require("../middlewares/checkRole");
-const upload = require("../middlewares/uploadProfile");
+import express from "express"
+
+const router = express.Router()
+
+import userProfileController from "../controllers/profile.controller.js"
+import auth from "../middlewares/auth.js"
+import checkRole from "../middlewares/checkRole.js"
+import upload from "../middlewares/uploadProfile.js"
+
 
 /**
  * @swagger
@@ -131,4 +134,4 @@ router.get("/search", auth, userProfileController.getProfileByKeyword);
  */
 router.put("/", auth, upload.single("profile_picture"), userProfileController.updateProfile);
 
-module.exports = router;
+export default router;
