@@ -88,7 +88,7 @@ const login = async (request, response) => {
     await dataUser.update({ refreshToken })
     response.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, // bisa diubah true kalo pake HTTPS
+      secure: true,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
@@ -109,6 +109,30 @@ const login = async (request, response) => {
     })
   }
 }
+
+export const checkAuth = async (request, response) => {
+  try {
+    const user = await userModel.findByPk(request.user.id, {
+      attributes: { exclude: ["password"] },
+    });
+    if (!user) {
+      return response.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
+    return response.status(200).json({
+      success: true,
+      message: "User is logged in",
+      data: user,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 const refreshToken = async (request, response) => {
   try {
@@ -150,6 +174,7 @@ const refreshToken = async (request, response) => {
     })
   }
 }
+
 const logout = async (request, response) => {
   try {
     const token = request.cookies.refreshToken
@@ -241,4 +266,4 @@ const updatePassword = async (request, response) => {
   }
 }
 
-export default {register, login, refreshToken, logout, updatePassword,}
+export default {register, login, refreshToken, logout, updatePassword, checkAuth}

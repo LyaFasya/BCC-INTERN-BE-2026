@@ -5,7 +5,7 @@ const router = express.Router();
 import category from "../controllers/category.controller.js";
 import authenticate from "../middlewares/auth.js";
 import checkRole from "../middlewares/checkRole.js";
-import upload from "../middlewares/uploadCategory.js";
+import upload from "../middlewares/upload.js";
 
 router.use(authenticate);
 

@@ -1,47 +1,37 @@
-import db from "../models/index.js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const foodCategoryModel = db.foodCategory;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const IMAGE_PATH = path.join(__dirname, "../image/category");
+import db from "../models/index.js"
+import { uploadImage } from "../services/cloudinary.service.js"
+const foodCategoryModel = db.foodCategory
 
 const createCategory = async (request, response) => {
   try {
-    const { category_name, description } = request.body
+    const { category_name, description } = request.body;
     if (!category_name) {
       return response.status(400).json({
         success: false,
-        message: "Category name is required"
-      })
+        message: "Category name is required",
+      });
     }
 
     const data = {
       categoryName: category_name,
-      description: description || null
+      description: description || null,
     }
     if (request.file) {
-      data.categoryProfile = request.file.filename
+      const imageUrl = await uploadImage(request.file);
+      data.categoryProfile = imageUrl; 
     }
 
-    const newCategory = await foodCategoryModel.create(data)
+    const newCategory = await foodCategoryModel.create(data);
     return response.status(201).json({
       success: true,
       message: "Category created",
-      data: newCategory
-    })
-
+      data: newCategory,
+    });
   } catch (error) {
-    if (request.file) {
-      const filePath = path.join(IMAGE_PATH, request.file.filename)
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
-    }
     return response.status(500).json({
       success: false,
-      message: error.message
-    })
+      message: error.message,
+    });
   }
 }
 
@@ -63,83 +53,68 @@ const getAllCategory = async (request, response) => {
 
 const updateCategory = async (request, response) => {
   try {
-    const category = await foodCategoryModel.findByPk(request.params.id)
+    const category = await foodCategoryModel.findByPk(request.params.id);
     if (!category) {
       return response.status(404).json({
         success: false,
-        message: "Category not found"
-      })
+        message: "Category not found",
+      });
     }
 
-    const updateData = {}
+    const updateData = {};
     if (request.body.category_name) {
-      updateData.categoryName = request.body.category_name
+      updateData.categoryName = request.body.category_name;
     }
     if (request.body.description) {
-      updateData.description = request.body.description
+      updateData.description = request.body.description;
     }
+
     if (request.file) {
-      if (category.categoryProfile) {
-        const oldPath = path.join(IMAGE_PATH, category.categoryProfile)
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath)
-      }
-      updateData.categoryProfile = request.file.filename
+      const imageUrl = await uploadImage(request.file);
+      updateData.categoryProfile = imageUrl;
     }
-
     await foodCategoryModel.update(updateData, {
-      where: { id: request.params.id }
-    })
+      where: { id: request.params.id },
+    });
 
-    const updated = await foodCategoryModel.findByPk(request.params.id)
+    const updated = await foodCategoryModel.findByPk(request.params.id);
     return response.json({
       success: true,
       message: "Category updated",
-      data: updated
-    })
-
+      data: updated,
+    });
   } catch (error) {
-    if (request.file) {
-      const filePath = path.join(IMAGE_PATH, request.file.filename)
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
-    }
-
     return response.status(500).json({
       success: false,
-      message: error.message
-    })
+      message: error.message,
+    });
   }
 }
 
 const deleteCategory = async (request, response) => {
   try {
-    const category = await foodCategoryModel.findByPk(request.params.id)
+    const category = await foodCategoryModel.findByPk(request.params.id);
+
     if (!category) {
       return response.status(404).json({
         success: false,
-        message: "Category not found"
-      })
-    }
-    
-    if (category.categoryProfile) {
-      const filePath = path.join(IMAGE_PATH, category.categoryProfile)
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+        message: "Category not found",
+      });
     }
 
     await foodCategoryModel.destroy({
-      where: { id: request.params.id }
-    })
-
+      where: { id: request.params.id },
+    });
     return response.json({
       success: true,
-      message: "Category deleted"
-    })
-
+      message: "Category deleted",
+    });
   } catch (error) {
     return response.status(500).json({
       success: false,
-      message: error.message
-    })
+      message: error.message,
+    });
   }
 }
 
-export default {createCategory, getAllCategory, updateCategory, deleteCategory,};
+export default {createCategory, getAllCategory, updateCategory, deleteCategory}

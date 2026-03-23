@@ -111,6 +111,8 @@ router.post("/login", authController.login);
  */
 router.post("/refresh", authController.refreshToken);
 
+router.get("/me", auth, authController.checkAuth);
+
 /**
  * @swagger
  * /auth/logout:

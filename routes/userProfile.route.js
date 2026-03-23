@@ -5,7 +5,7 @@ const router = express.Router()
 import userProfileController from "../controllers/profile.controller.js"
 import auth from "../middlewares/auth.js"
 import checkRole from "../middlewares/checkRole.js"
-import upload from "../middlewares/uploadProfile.js"
+import upload from "../middlewares/upload.js"
 
 
 /**
