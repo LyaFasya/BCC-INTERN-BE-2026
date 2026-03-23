@@ -88,7 +88,7 @@ const login = async (request, response) => {
     await dataUser.update({ refreshToken })
     response.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, // bisa diubah true kalo pake HTTPS
+      secure: true,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
@@ -109,6 +109,21 @@ const login = async (request, response) => {
     })
   }
 }
+
+const checkAuth = async (request, response) => {
+  try {
+    return response.status(200).json({
+      success: true,
+      message: "User is logged in",
+      data: request.user
+    });
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 const refreshToken = async (request, response) => {
   try {
@@ -150,6 +165,7 @@ const refreshToken = async (request, response) => {
     })
   }
 }
+
 const logout = async (request, response) => {
   try {
     const token = request.cookies.refreshToken
@@ -241,4 +257,4 @@ const updatePassword = async (request, response) => {
   }
 }
 
-export default {register, login, refreshToken, logout, updatePassword,}
+export default {register, login, refreshToken, logout, updatePassword,checkAuth}

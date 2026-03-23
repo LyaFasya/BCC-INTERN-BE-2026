@@ -170,6 +170,159 @@ const updateFoodUsage = async (request, response) => {
   }
 };
 
+const getConsumedCount = async (request, response) => {
+  try {
+    if (!request.user) {
+      return response.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
 
+    const { id: userId } = request.user
+    const count = await food.count({
+      where: {
+        userId,
+        status: "consumed"
+      }
+    });
 
-export default {createFood, getAllFood, updateFoodUsage}
+    return response.status(200).json({
+      success: true,
+      message: "Total number of consumed food items",
+      data: count
+    });
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+const getWarningCount = async (request, response) => {
+  try {
+    if (!request.user) {
+      return response.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+
+    const userId = request.user.id;
+    const count = await food.count({
+      where: {
+        status: "warning",
+        userId: userId
+      }
+    });
+
+    return response.status(200).json({
+      success: true,
+      message: "Total number of warning food items",
+      data: count
+    });
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+const getExpiredCount= async (request, response) => {
+  try {
+    if (!request.user) {
+      return response.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+
+    const userId = request.user.id;
+    const count = await food.count({
+      where: {
+        status: "expired",
+        userId: userId
+      }
+    });
+
+    return response.status(200).json({
+      success: true,
+      message: "Total number of expired food items",
+      data: count
+    });
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+const getLossFromDiscarded = async (request, response) => {
+  try {
+    const userId = request.user.id;
+
+    const result = await food.findOne({
+      attributes: [
+        [
+          Sequelize.fn(
+            "SUM",
+            Sequelize.literal("price_of_unit * current_weight")
+          ),
+          "totalLoss"
+        ]
+      ],
+      where: {
+        status: "discarded",
+        userId: userId
+      },
+      raw: true
+    });
+
+    return response.status(200).json({
+      success: true,
+      message: "Total financial loss from discarded food",
+      data: result.totalLoss || 0
+    })
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+const getPriceWarning = async (request, response) => {
+  try {
+    const userId = request.user.id;
+
+    const result = await food.findOne({
+      attributes: [
+        [
+          Sequelize.literal("COALESCE(SUM(price_of_unit * current_weight), 0)"),
+          "totalValue"
+        ]
+      ],
+      where: {
+        status: "warning",
+        userId: userId
+      },
+      raw: true
+    });
+
+    return response.status(200).json({
+      success: true,
+      message: "Total value of warning food items for this user",
+      data: result.totalValue
+    });
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export default {createFood, getAllFood, updateFoodUsage, getConsumedCount, getWarningCount, getExpiredCount, getLossFromDiscarded, getPriceWarning}
