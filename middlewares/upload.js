@@ -1,28 +1,19 @@
-import multer from "multer"
-import path from "path"
+import multer from "multer";
 
-const storage = multer.diskStorage({
-  destination: (request, file, cb) => {
-    cb(null, "/tmp");
-  },
-  filename: (request, file, cb) => {
-    cb(null, `profile-${Date.now()}${path.extname(file.originalname)}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
   fileFilter: (request, file, cb) => {
-    const allowedTypes = ["image/jpg", "image/jpeg", "image/png"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
     if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error("Invalid file type (only jpg, jpeg, png allowed)"));
+      return cb(new Error("Invalid file type"));
     }
     cb(null, true);
   },
-
   limits: {
-    fileSize: 1 * 1024 * 1024, 
+    fileSize: 1 * 1024 * 1024,
   },
 });
 
-export default upload
+export default upload;

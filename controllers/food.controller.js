@@ -170,6 +170,38 @@ const updateFoodUsage = async (request, response) => {
   }
 };
 
+const getFreshCount = async (request, response) => {
+  try {
+    if (!request.user) {
+      return response.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+
+    const userId = request.user.id;
+
+    const count = await foodModel.count({
+      where: {
+        status: "fresh",
+        userId: userId
+      }
+    });
+
+    return response.status(200).json({
+      success: true,
+      message: "Total number of fresh food items",
+      data: count
+    });
+
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 const getConsumedCount = async (request, response) => {
   try {
     if (!request.user) {
@@ -325,4 +357,4 @@ const getPriceWarning = async (request, response) => {
   }
 };
 
-export default {createFood, getAllFood, updateFoodUsage, getConsumedCount, getWarningCount, getExpiredCount, getLossFromDiscarded, getPriceWarning}
+export default {createFood, getAllFood, updateFoodUsage,getFreshCount, getConsumedCount, getWarningCount, getExpiredCount, getLossFromDiscarded, getPriceWarning}
