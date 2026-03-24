@@ -1,35 +1,29 @@
-import db from "../models/index.js";
-import fs from "fs";
-import path from "path";
-import { Op } from "sequelize";
-import { fileURLToPath } from "url";
+import db from "../models/index.js"
+import { Op } from "sequelize"
+import { uploadImage } from "../services/cloudinary.service.js"
 
-const userProfileModel = db.userProfile;
-const userModel = db.user;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const IMAGE_PATH = path.join(__dirname, "../image/profile");
+const userProfileModel = db.userProfile
+const userModel = db.user
 
 const createProfile = async (request, response) => {
   try {
-    const userId = request.user.id
+    const userId = request.user.id;
     const existingProfile = await userProfileModel.findOne({
-      where: { userId }
-    })
-
+      where: { userId },
+    });
     if (existingProfile) {
       return response.status(400).json({
         success: false,
-        message: "Profile already exists"
-      })
+        message: "Profile already exists",
+      });
     }
 
-    const { name, phone_number, address, gender } = request.body
+    const { name, phone_number, address, gender } = request.body;
     if (!name || !phone_number) {
       return response.status(400).json({
         success: false,
-        message: "Name and phone number are required"
-      })
+        message: "Name and phone number are required",
+      });
     }
 
     const dataProfile = {
@@ -37,84 +31,67 @@ const createProfile = async (request, response) => {
       name,
       phoneNumber: phone_number,
       address: address || null,
-      gender: gender || null
-    }
+      gender: gender || null,
+    };
+
     if (request.file) {
-      dataProfile.profilePicture = request.file.filename
+      const imageUrl = await uploadImage(request.file);
+      dataProfile.profilePicture = imageUrl;
     }
 
-    const newProfile = await userProfileModel.create(dataProfile)
+    const newProfile = await userProfileModel.create(dataProfile);
     return response.status(201).json({
       success: true,
       message: "Profile created",
-      data: newProfile
-    })
-
+      data: newProfile,
+    });
   } catch (error) {
-    if (request.file) {
-      const filePath = path.join(__dirname, "../image/profile", request.file.filename)
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath)
-      }
-    }
     return response.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     })
-
   }
 }
 
 const updateProfile = async (request, response) => {
   try {
-    const userId = request.user.id
+    const userId = request.user.id;
     const profile = await userProfileModel.findOne({
-      where: { userId }
+      where: { userId },
     })
-
     if (!profile) {
       return response.status(404).json({
         success: false,
-        message: "Profile not found"
+        message: "Profile not found",
       })
     }
 
-    const updateData = {}
-    if (request.body.name) updateData.name = request.body.name
-    if (request.body.phone_number) updateData.phoneNumber = request.body.phone_number
-    if (request.body.address) updateData.address = request.body.address
-    if (request.body.gender) updateData.gender = request.body.gender
+    const updateData = {};
+    if (request.body.name) updateData.name = request.body.name;
+    if (request.body.phone_number) updateData.phoneNumber = request.body.phone_number;
+    if (request.body.address) updateData.address = request.body.address;
+    if (request.body.gender) updateData.gender = request.body.gender;
+
     if (request.file) {
-      if (profile.profilePicture) {
-        const oldPath = path.join(IMAGE_PATH, profile.profilePicture)
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath)
-        }
-      }
-      updateData.profilePicture = request.file.filename
+      const imageUrl = await uploadImage(request.file);
+      updateData.profilePicture = imageUrl;
     }
 
     await userProfileModel.update(updateData, {
-      where: { userId }
+      where: { userId },
     })
     const updatedProfile = await userProfileModel.findOne({
-      where: { userId }
+      where: { userId },
     })
-
     return response.json({
       success: true,
       message: "Profile updated",
-      data: updatedProfile
+      data: updatedProfile,
     })
-
   } catch (error) {
-    if (request.file) {
-      const filePath = path.join(IMAGE_PATH, request.file.filename)
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
-    }
     return response.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     })
   }
 }

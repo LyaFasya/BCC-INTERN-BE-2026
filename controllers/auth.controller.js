@@ -110,12 +110,22 @@ const login = async (request, response) => {
   }
 }
 
-const checkAuth = async (request, response) => {
+
+export const checkAuth = async (request, response) => {
   try {
+    const user = await userModel.findByPk(request.user.id, {
+      attributes: { exclude: ["password"] },
+    });
+    if (!user) {
+      return response.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
     return response.status(200).json({
       success: true,
       message: "User is logged in",
-      data: request.user
+      data: user,
     });
   } catch (error) {
     return response.status(500).json({
@@ -257,4 +267,4 @@ const updatePassword = async (request, response) => {
   }
 }
 
-export default {register, login, refreshToken, logout, updatePassword,checkAuth}
+export default {register, login, refreshToken, logout, updatePassword, checkAuth}
