@@ -20,6 +20,10 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       field: "user_id"
     },
+    profilePublicId: {
+      type: DataTypes.STRING,
+      field: "profile_public_id"
+    },
     name: DataTypes.STRING,
     phoneNumber: {
       type: DataTypes.STRING,
@@ -30,7 +34,7 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       field: "profile_picture"
     },
-    gender: DataTypes.STRING
+    gender: DataTypes.ENUM('male', 'female')
   }, {
     sequelize,
     modelName: 'userProfile',

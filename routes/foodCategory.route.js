@@ -1,13 +1,13 @@
-import express from "express";
+import express from "express"
 
-const router = express.Router();
+const router = express.Router()
 
-import category from "../controllers/category.controller.js";
-import authenticate from "../middlewares/auth.js";
-import checkRole from "../middlewares/checkRole.js";
-import upload from "../middlewares/upload.js";
+import category from "../controllers/category.controller.js"
+import authenticate from "../middlewares/auth.js"
+import checkRole from "../middlewares/checkRole.js"
+import upload from "../middlewares/upload.js"
 
-router.use(authenticate);
+router.use(authenticate)
 
 /**
  * @swagger
@@ -28,7 +28,7 @@ router.use(authenticate);
  *       200:
  *         description: List of categories
  */
-router.get("/", category.getAllCategory);
+router.get("/", category.getAllCategory)
 
 /**
  * @swagger
@@ -60,7 +60,7 @@ router.get("/", category.getAllCategory);
  *       403:
  *         description: Forbidden
  */
-router.post("/", checkRole("admin"), upload.single("category_profile"), category.createCategory);
+router.post("/", checkRole("admin"), upload.single("category_profile"), category.createCategory)
 
 /**
  * @swagger
@@ -96,7 +96,7 @@ router.post("/", checkRole("admin"), upload.single("category_profile"), category
  *       404:
  *         description: Category not found
  */
-router.put("/:id", checkRole("admin"), upload.single("category_profile"), category.updateCategory);
+router.put("/:id", checkRole("admin"), upload.single("category_profile"), category.updateCategory)
 
 /**
  * @swagger
@@ -119,6 +119,6 @@ router.put("/:id", checkRole("admin"), upload.single("category_profile"), catego
  *       404:
  *         description: Category not found
  */
-router.delete("/:id", checkRole("admin"), category.deleteCategory);
+router.delete("/:id", checkRole("admin"), category.deleteCategory)
 
-export default router;
+export default router

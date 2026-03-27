@@ -1,19 +1,23 @@
-import multer from "multer";
+import multer from "multer"
 
-const storage = multer.memoryStorage();
+const storage = multer.memoryStorage()
+
+const fileFilter = (request, file, cb) => {
+  const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
+
+  if (!allowedTypes.includes(file.mimetype)) {
+    return cb(new Error("Only image files are allowed (jpeg, png, jpg, webp)"), false)
+  }
+
+  cb(null, true)
+}
 
 const upload = multer({
-  storage: storage,
-  fileFilter: (request, file, cb) => {
-    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
-    if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error("Invalid file type"));
-    }
-    cb(null, true);
-  },
+  storage,
+  fileFilter,
   limits: {
-    fileSize: 1 * 1024 * 1024,
+    fileSize: 1 * 1024 * 1024, // max 1MB
   },
-});
+})
 
-export default upload;
+export default upload

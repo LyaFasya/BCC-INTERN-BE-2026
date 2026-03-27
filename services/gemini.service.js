@@ -32,16 +32,16 @@ Format:
   "expiry_date": "YYYY-MM-DD",
   "shelf_life_days": number
 }
-`;
+`
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
     })
 
-    let text = response.text.trim();
+    let text = response.text.trim()
     text = text.replace(/```json/g, "").replace(/```/g, "").trim()
-    let parsed;
+    let parsed
 
     try {
       parsed = JSON.parse(text)
@@ -57,7 +57,7 @@ Format:
       shelf_life_days: parsed.shelf_life_days || 3
     }
   } catch (error) {
-    console.error("Gemini error:", error.message);
+    console.error("Gemini error:", error.message)
     return {
       expiry_date: null,
       shelf_life_days: 3

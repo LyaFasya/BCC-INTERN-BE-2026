@@ -28,7 +28,14 @@ export default (sequelize, DataTypes) => {
     },
     title: DataTypes.STRING,
     message: DataTypes.TEXT,
-    type: DataTypes.STRING,
+    type: {
+      type: DataTypes.ENUM(
+        'expiry_3',
+        'expiry_2',
+        'expiry_1',
+        'expired'
+      )
+    },
     isRead: {
       type: DataTypes.BOOLEAN,
       field: "is_read"

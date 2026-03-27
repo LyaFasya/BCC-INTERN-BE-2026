@@ -17,6 +17,10 @@ export default {
         onUpdate: "CASCADE",
         onDelete: "CASCADE"
       },
+      profile_public_id: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       name: {
         type: Sequelize.STRING,
         allowNull: false

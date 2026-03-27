@@ -15,6 +15,10 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
+    categoryPublicId: {
+      type: DataTypes.STRING,
+      field: "category_public_id"
+    },
     categoryName: {
       type: DataTypes.STRING,
       field: "category_name"
@@ -23,8 +27,8 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       field: "category_profile"
     },
-    description: DataTypes.TEXT
-  }, {
+  }, 
+  {
     sequelize,
     modelName: 'foodCategory',
     tableName: 'food_categories',

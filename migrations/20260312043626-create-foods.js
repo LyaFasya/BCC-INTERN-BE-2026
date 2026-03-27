@@ -40,14 +40,9 @@ export default {
       },
       unit_of_weight: {
         type: Sequelize.ENUM(
-          'kg',
-          'gr',
-          'butir',
+          'gram',
           'ikat',
-          'buah',
-          'siung',
-          'ruas',
-          'liter',
+          'pcs',
           'ml'
         ),
         allowNull: false

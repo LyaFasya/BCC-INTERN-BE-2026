@@ -7,15 +7,15 @@ export default {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      category_public_id: {
+        type: Sequelize.STRING
+      },
       category_name: {
         type: Sequelize.STRING,
         allowNull: false
       },
       category_profile: {
         type: Sequelize.STRING
-      },
-      description: {
-        type: Sequelize.TEXT
       },
       created_at: {
         allowNull: false,

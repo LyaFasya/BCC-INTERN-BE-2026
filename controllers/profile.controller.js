@@ -1,50 +1,65 @@
 import db from "../models/index.js"
 import { Op } from "sequelize"
 import { uploadImage } from "../services/cloudinary.service.js"
+import { v2 as cloudinary } from "cloudinary"
 
 const userProfileModel = db.userProfile
 const userModel = db.user
 
 const createProfile = async (request, response) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.id
     const existingProfile = await userProfileModel.findOne({
       where: { userId },
-    });
+    })
     if (existingProfile) {
       return response.status(400).json({
         success: false,
         message: "Profile already exists",
-      });
+      })
     }
 
-    const { name, phone_number, address, gender } = request.body;
+    const { name, phone_number, address, gender } = request.body
     if (!name || !phone_number) {
       return response.status(400).json({
         success: false,
         message: "Name and phone number are required",
-      });
+      })
     }
+    if (!/^[0-9]+$/.test(phone_number)) {
+      return response.status(400).json({
+        success: false,
+        message: "Phone number must be numeric",
+      })
+    } 
 
     const dataProfile = {
       userId,
-      name,
-      phoneNumber: phone_number,
+      name: name.trim(),
+      phoneNumber: phone_number.trim(),
       address: address || null,
       gender: gender || null,
-    };
-
-    if (request.file) {
-      const imageUrl = await uploadImage(request.file);
-      dataProfile.profilePicture = imageUrl;
     }
 
-    const newProfile = await userProfileModel.create(dataProfile);
+    if (request.file) {
+      try {
+        const result = await uploadImage(request.file, "profiles")
+        dataProfile.profilePicture = result.url
+        dataProfile.profilePublicId = result.public_id
+      } catch (err) {
+        return response.status(500).json({
+          success: false,
+          message: "Image upload failed",
+        })
+      }
+    }
+
+    const newProfile = await userProfileModel.create(dataProfile)
     return response.status(201).json({
       success: true,
       message: "Profile created",
       data: newProfile,
-    });
+    })
   } catch (error) {
     return response.status(500).json({
       success: false,
@@ -55,7 +70,7 @@ const createProfile = async (request, response) => {
 
 const updateProfile = async (request, response) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.id
     const profile = await userProfileModel.findOne({
       where: { userId },
     })
@@ -66,20 +81,29 @@ const updateProfile = async (request, response) => {
       })
     }
 
-    const updateData = {};
-    if (request.body.name) updateData.name = request.body.name;
-    if (request.body.phone_number) updateData.phoneNumber = request.body.phone_number;
-    if (request.body.address) updateData.address = request.body.address;
-    if (request.body.gender) updateData.gender = request.body.gender;
-
-    if (request.file) {
-      const imageUrl = await uploadImage(request.file);
-      updateData.profilePicture = imageUrl;
+    const updateData = {}
+    if (request.body.name) { updateData.name = request.body.name.trim()}
+    if (request.body.phone_number) {
+      if (!/^[0-9]+$/.test(request.body.phone_number)) {
+        return response.status(400).json({
+          success: false,
+          message: "Phone number must be numeric",
+        })
+      }
+      updateData.phoneNumber = request.body.phone_number.trim()
     }
-
-    await userProfileModel.update(updateData, {
-      where: { userId },
-    })
+    if (request.body.address) {updateData.address = request.body.address}
+    if (request.body.gender) {updateData.gender = request.body.gender}
+    
+    if (request.file) {
+      if (profile.profilePublicId) {
+        await cloudinary.uploader.destroy(profile.profilePublicId)
+      }
+      const result = await uploadImage(request.file, "profiles")
+      updateData.profilePicture = result.url
+      updateData.profilePublicId = result.public_id
+    }
+    await profile.update(updateData)
     const updatedProfile = await userProfileModel.findOne({
       where: { userId },
     })
@@ -106,7 +130,6 @@ const getAllProfile = async (request, response) => {
         }
       ]
     })
-
     return response.json({
       success: true,
       message: "All profiles retrieved",
@@ -147,7 +170,7 @@ const getMyProfile = async (request, response) => {
 
 const getProfileByKeyword = async (request, response) => {
   try {
-    const keyword = Object.keys(request.query)[0] || ""
+    const keyword = request.query.search || ""
     const profiles = await userProfileModel.findAll({
       where: {
         [Op.or]: [
@@ -172,4 +195,4 @@ const getProfileByKeyword = async (request, response) => {
   }
 }
 
-export default {createProfile, updateProfile, getAllProfile, getMyProfile, getProfileByKeyword,};
+export default {createProfile, updateProfile, getAllProfile, getMyProfile, getProfileByKeyword,}

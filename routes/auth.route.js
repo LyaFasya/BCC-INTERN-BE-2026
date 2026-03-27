@@ -1,7 +1,7 @@
-import express from "express";
-const router = express.Router();
-import authController from "../controllers/auth.controller.js";
-import auth from "../middlewares/auth.js";
+import express from "express"
+const router = express.Router()
+import authController from "../controllers/auth.controller.js"
+import auth from "../middlewares/auth.js"
 /**
  * @swagger
  * tags:
@@ -37,7 +37,7 @@ import auth from "../middlewares/auth.js";
  *       500:
  *         description: Server error
  */
-router.post("/register", authController.register);
+router.post("/register", authController.register)
 
 /**
  * @swagger
@@ -92,9 +92,9 @@ router.post("/register", authController.register);
  *       500:
  *         description: Server error
  */
-router.post("/login", authController.login);
+router.post("/login", authController.login)
 
-router.get("/me", auth, authController.checkAuth);
+router.get("/me", auth, authController.checkAuth)
 
 /**
  * @swagger
@@ -111,9 +111,9 @@ router.get("/me", auth, authController.checkAuth);
  *       403:
  *         description: Invalid token
  */
-router.post("/refresh", authController.refreshToken);
+router.post("/refresh", authController.refreshToken)
 
-router.get("/me", auth, authController.checkAuth);
+router.get("/me", auth, authController.checkAuth)
 
 /**
  * @swagger
@@ -126,7 +126,7 @@ router.get("/me", auth, authController.checkAuth);
  *       200:
  *         description: Logout success
  */
-router.post("/logout", authController.logout);
+router.post("/logout", authController.logout)
 
 /**
  * @swagger
@@ -163,6 +163,6 @@ router.post("/logout", authController.logout);
  *       500:
  *         description: Server error
  */
-router.put("/update-password", auth, authController.updatePassword);
+router.put("/update-password", auth, authController.updatePassword)
 
-export default router;
+export default router

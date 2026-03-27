@@ -12,6 +12,10 @@ export default (sequelize, DataTypes) => {
       food.hasMany(models.notification, {
         foreignKey: 'foodId'
       });
+      food.hasMany(models.foodLog, {
+        foreignKey: "foodId",
+        as: "foodLogs"
+      });
     }
   }
 
@@ -48,14 +52,9 @@ export default (sequelize, DataTypes) => {
     },
     unitOfWeight: {
       type: DataTypes.ENUM(
-        'kg',
-        'gr',
-        'butir',
+        'gram',
         'ikat',
-        'buah',
-        'siung',
-        'ruas',
-        'liter',
+        'pcs',
         'ml'
       ),
       allowNull: false,

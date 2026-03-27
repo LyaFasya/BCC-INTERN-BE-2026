@@ -1,36 +1,47 @@
-import 'dotenv/config';
-import express from "express";
+import 'dotenv/config'
+import express from "express"
+import cors from "cors"
+import "./services/statusCorn.services.js"
 
-import authRoutes from "./routes/auth.route.js";
-import profileRoutes from "./routes/userProfile.route.js";
-import userRoutes from "./routes/user.route.js";
-import categoryRoutes from "./routes/foodCategory.route.js";
+import authRoutes from "./routes/auth.route.js"
+import profileRoutes from "./routes/userProfile.route.js"
+import userRoutes from "./routes/user.route.js"
+import categoryRoutes from "./routes/foodCategory.route.js"
 import foodRoutes from "./routes/food.route.js"
+import foodStatusRoutes from "./routes/foodStatus.route.js"
+import wasteTrackerRoutes from "./routes/wasteTracker.route.js"
 
-import createAdmin from "./utils/createAdmin.js";
-import swaggerUi from "swagger-ui-express";
-import swaggerSpec from "./swagger.js";
-import cookieParser from "cookie-parser";
+import createAdmin from "./utils/createAdmin.js"
+import swaggerUi from "swagger-ui-express"
+import swaggerSpec from "./swagger.js"
+import cookieParser from "cookie-parser"
 
-const app = express();
-const PORT = process.env.PORT || 8000;
+const app = express()
+const PORT = process.env.PORT || 8000
 
-app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}))
 
-app.use("/auth", authRoutes);
-app.use("/profile", profileRoutes);
-app.use("/users", userRoutes);
-app.use("/category", categoryRoutes);
-app.use("/food", foodRoutes);
+app.use(cookieParser())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/auth", authRoutes)
+app.use("/profile", profileRoutes)
+app.use("/users", userRoutes)
+app.use("/category", categoryRoutes)
+app.use("/food", foodRoutes)
+app.use("/food_status", foodStatusRoutes)
+app.use("/waste_tracker", wasteTrackerRoutes)
 
-createAdmin();
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
+createAdmin()
 
 app.listen(PORT, () => {
-  console.log(`Server of Simpanin.id runs on port ${PORT}`);
-});
+  console.log(`Server of Simpanin.id runs on port ${PORT}`)
+})
 
-export default app;
+export default app

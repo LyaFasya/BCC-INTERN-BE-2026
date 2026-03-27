@@ -37,9 +37,9 @@ export default {
       },
       type: {
         type: Sequelize.ENUM(
-          'expiry_3_days',
-          'expiry_2_days',
-          'expiry_1_day',
+          'expiry_3',
+          'expiry_2',
+          'expiry_1',
           'expired'
         )
       },

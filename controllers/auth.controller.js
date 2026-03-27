@@ -7,7 +7,6 @@ const refresh_secret = process.env.JWT_REFRESH_SECRET || "simpanin_refresh"
 
 const register = async (request, response) => {
   try {
-
     const { email, password, confirm_password } = request.body
     if (password !== confirm_password) {
       return response.status(400).json({
@@ -72,7 +71,6 @@ const login = async (request, response) => {
         message: "Invalid password"
       })
     }
-
     const payload = {
       id: dataUser.id,
       email: dataUser.email,
@@ -101,7 +99,6 @@ const login = async (request, response) => {
       data: userApprove,
       accessToken
     })
-
   } catch (error) {
     return response.status(500).json({
       success: false,
@@ -115,7 +112,7 @@ export const checkAuth = async (request, response) => {
   try {
     const user = await userModel.findByPk(request.user.id, {
       attributes: { exclude: ["password"] },
-    });
+    })
     if (!user) {
       return response.status(404).json({
         success: false,
@@ -126,14 +123,14 @@ export const checkAuth = async (request, response) => {
       success: true,
       message: "User is logged in",
       data: user,
-    });
+    })
   } catch (error) {
     return response.status(500).json({
       success: false,
       message: error.message
-    });
+    })
   }
-};
+}
 
 const refreshToken = async (request, response) => {
   try {
@@ -181,7 +178,6 @@ const logout = async (request, response) => {
     const token = request.cookies.refreshToken
     if (!token) return response.sendStatus(204)
     const decoded = jwt.verify(token, refresh_secret)
-
     await userModel.update(
       { refreshToken: null },
       { where: { id: decoded.id } }
@@ -192,7 +188,6 @@ const logout = async (request, response) => {
       success: true,
       message: "Logout success"
     })
-
   } catch (error) {
     response.clearCookie("refreshToken")
     return response.sendStatus(204)
@@ -209,14 +204,12 @@ const updatePassword = async (request, response) => {
         message: "All fields are required"
       })
     }
-
     if (newPassword !== confirmPassword) {
       return response.status(400).json({
         success: false,
         message: "Password confirmation does not match"
       })
     }
-
     if (newPassword.length < 6) {
       return response.status(400).json({
         success: false,
@@ -253,12 +246,10 @@ const updatePassword = async (request, response) => {
       { password: hashedPassword },
       { where: { id: userId } }
     )
-
     return response.json({
       success: true,
       message: "Password updated successfully"
     })
-
   } catch (error) {
     return response.status(500).json({
       success: false,

@@ -107,4 +107,4 @@ router.get("/me", auth, userController.getMe)
  */
 router.delete("/me", auth, userController.deleteMyAccount)
 
-export default router;
+export default router

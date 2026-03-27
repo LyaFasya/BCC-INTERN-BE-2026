@@ -29,7 +29,7 @@ import upload from "../middlewares/upload.js"
  *       403:
  *         description: Forbidden
  */
-router.get("/", auth, checkRole("admin"), userProfileController.getAllProfile);
+router.get("/", auth, checkRole("admin"), userProfileController.getAllProfile)
 
 /**
  * @swagger
@@ -64,7 +64,7 @@ router.get("/", auth, checkRole("admin"), userProfileController.getAllProfile);
  *       201:
  *         description: Profile created
  */
-router.post("/", auth, upload.single("profile_picture"), userProfileController.createProfile);
+router.post("/", auth, upload.single("profile_picture"), userProfileController.createProfile)
 
 /**
  * @swagger
@@ -80,7 +80,7 @@ router.post("/", auth, upload.single("profile_picture"), userProfileController.c
  *       404:
  *         description: Profile not found
  */
-router.get("/me", auth, userProfileController.getMyProfile);
+router.get("/me", auth, userProfileController.getMyProfile)
 
 /**
  * @swagger
@@ -101,7 +101,7 @@ router.get("/me", auth, userProfileController.getMyProfile);
  *       200:
  *         description: Search success
  */
-router.get("/search", auth, userProfileController.getProfileByKeyword);
+router.get("/search", auth, userProfileController.getProfileByKeyword)
 
 /**
  * @swagger
@@ -132,6 +132,6 @@ router.get("/search", auth, userProfileController.getProfileByKeyword);
  *       200:
  *         description: Profile updated
  */
-router.put("/", auth, upload.single("profile_picture"), userProfileController.updateProfile);
+router.put("/", auth, upload.single("profile_picture"), userProfileController.updateProfile)
 
-export default router;
+export default router
