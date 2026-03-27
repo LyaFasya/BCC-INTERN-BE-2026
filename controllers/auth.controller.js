@@ -53,59 +53,73 @@ const register = async (request, response) => {
 
 const login = async (request, response) => {
   try {
-    const { email, password } = request.body
-    const dataUser = await userModel.findOne({
-      where: { email }
-    })
+    const { email, password } = request.body;
+
+    const dataUser = await userModel.findOne({ where: { email } });
     if (!dataUser) {
       return response.status(404).json({
         success: false,
         message: "Email not found"
-      })
+      });
     }
 
-    const validPassword = await bcrypt.compare(password, dataUser.password)
+    const validPassword = await bcrypt.compare(password, dataUser.password);
     if (!validPassword) {
       return response.status(401).json({
         success: false,
         message: "Invalid password"
-      })
+      });
     }
+
     const payload = {
       id: dataUser.id,
       email: dataUser.email,
       role: dataUser.role
-    }
+    };
+
     const accessToken = jwt.sign(payload, access_secret, {
       expiresIn: "15m"
-    })
+    });
+
     const refreshToken = jwt.sign(payload, refresh_secret, {
       expiresIn: "7d"
-    })
+    });
 
-    await dataUser.update({ refreshToken })
+    await dataUser.update({ refreshToken });
+
+    // ✅ ACCESS TOKEN COOKIE
+    response.cookie("token", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    // ✅ REFRESH TOKEN COOKIE
     response.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000
-    })
+    });
 
     const { password: _, refreshToken: __, ...userApprove } =
-      dataUser.toJSON()
+      dataUser.toJSON();
+
     return response.status(200).json({
       success: true,
       message: "Login success",
-      data: userApprove,
-      accessToken
-    })
+      data: userApprove
+      // ❌ HAPUS accessToken dari response
+    });
+
   } catch (error) {
     return response.status(500).json({
       success: false,
       message: error.message
-    })
+    });
   }
-}
+};
 
 
 export const checkAuth = async (request, response) => {

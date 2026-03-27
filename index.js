@@ -19,10 +19,24 @@ import cookieParser from "cookie-parser"
 const app = express()
 const PORT = process.env.PORT || 8000
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://simpaninid-alpha.vercel.app"
+];
+
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: function (origin, callback) {
+    // allow request tanpa origin (postman, dll)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
-}))
+}));
 
 app.use(cookieParser())
 app.use(express.json())
