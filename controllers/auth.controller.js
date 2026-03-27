@@ -88,10 +88,12 @@ const login = async (request, response) => {
     await dataUser.update({ refreshToken });
 
     // ✅ ACCESS TOKEN COOKIE
+   const isProduction = process.env.NODE_ENV === "production";
+
     response.cookie("token", accessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000
     });
 

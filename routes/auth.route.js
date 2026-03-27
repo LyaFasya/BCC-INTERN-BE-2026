@@ -94,7 +94,7 @@ router.post("/register", authController.register)
  */
 router.post("/login", authController.login)
 
-router.get("/me", auth, authController.checkAuth)
+router.get("/me", verifyToken, authController.checkAuth)
 
 /**
  * @swagger
