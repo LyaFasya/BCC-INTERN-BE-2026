@@ -10,10 +10,6 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:8000",
-        description: "Local Development Server"
-      },
-      {
         url: "https://api-node-simpaninid.up.railway.app",
         description: "Production Server"
       }
