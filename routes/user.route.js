@@ -6,12 +6,38 @@ import userController from "../controllers/user.controller.js"
 import auth from "../middlewares/auth.js"
 import checkRole from "../middlewares/checkRole.js"
 
-
 /**
  * @swagger
  * tags:
  *   name: Users
  *   description: User management
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         email:
+ *           type: string
+ *         role:
+ *           type: string
+ *     UserProfile:
+ *       type: object
+ *       properties:
+ *         email:
+ *           type: string
+ *     BaseResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
  */
 
 /**
@@ -24,27 +50,18 @@ import checkRole from "../middlewares/checkRole.js"
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: All users have been loaded
+ *         description: All users loaded
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                       email:
- *                         type: string
- *                       role:
- *                         type: string
- *                 message:
- *                   type: string
+ *               allOf:
+ *                 - $ref: '#/components/schemas/BaseResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/User'
  *       403:
  *         description: Forbidden (not admin)
  *       500:
@@ -71,10 +88,7 @@ router.get("/", auth, checkRole("admin"), userController.getAllUser)
  *                 success:
  *                   type: boolean
  *                 data:
- *                   type: object
- *                   properties:
- *                     email:
- *                       type: string
+ *                   $ref: '#/components/schemas/UserProfile'
  *       404:
  *         description: User not found
  *       500:
@@ -96,12 +110,7 @@ router.get("/me", auth, userController.getMe)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/BaseResponse'
  *       500:
  *         description: Server error
  */

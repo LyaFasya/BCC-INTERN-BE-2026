@@ -53,78 +53,66 @@ const register = async (request, response) => {
 
 const login = async (request, response) => {
   try {
-    const { email, password } = request.body;
-
-    const dataUser = await userModel.findOne({ where: { email } });
+    const { email, password } = request.body
+    const dataUser = await userModel.findOne({ where: { email } })
     if (!dataUser) {
       return response.status(404).json({
         success: false,
         message: "Email not found"
-      });
+      })
     }
 
-    const validPassword = await bcrypt.compare(password, dataUser.password);
+    const validPassword = await bcrypt.compare(password, dataUser.password)
     if (!validPassword) {
       return response.status(401).json({
         success: false,
         message: "Invalid password"
-      });
+      })
     }
-
     const payload = {
       id: dataUser.id,
       email: dataUser.email,
       role: dataUser.role
-    };
-
+    }
     const accessToken = jwt.sign(payload, access_secret, {
       expiresIn: "15m"
-    });
-
+    })
     const refreshToken = jwt.sign(payload, refresh_secret, {
       expiresIn: "7d"
-    });
+    })
+    await dataUser.update({ refreshToken })
 
-    await dataUser.update({ refreshToken });
-
-    // ✅ ACCESS TOKEN COOKIE
-   const isProduction = process.env.NODE_ENV === "production";
-
+   const isProduction = process.env.NODE_ENV === "production"
     response.cookie("token", accessToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000
-    });
-
-    // ✅ REFRESH TOKEN COOKIE
+    })
     response.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    })
 
     const { password: _, refreshToken: __, ...userApprove } =
-      dataUser.toJSON();
-
+      dataUser.toJSON()
     return response.status(200).json({
       success: true,
       message: "Login success",
       data: userApprove
-      // ❌ HAPUS accessToken dari response
-    });
-
+    })
   } catch (error) {
     return response.status(500).json({
       success: false,
       message: error.message
-    });
+    })
   }
-};
+}
 
 
-export const checkAuth = async (request, response) => {
+const checkAuth = async (request, response) => {
   try {
     const user = await userModel.findByPk(request.user.id, {
       attributes: { exclude: ["password"] },
@@ -175,7 +163,6 @@ const refreshToken = async (request, response) => {
     const newAccessToken = jwt.sign(payload, access_secret, {
       expiresIn: "15m"
     })
-
     return response.json({
       success: true,
       accessToken: newAccessToken
@@ -240,7 +227,6 @@ const updatePassword = async (request, response) => {
         message: "User not found"
       })
     }
-
     const isMatch = await bcrypt.compare(oldPassword, user.password)
     if (!isMatch) {
       return response.status(400).json({
@@ -248,7 +234,6 @@ const updatePassword = async (request, response) => {
         message: "Wrong old password"
       })
     }
-
     const isSamePassword = await bcrypt.compare(newPassword, user.password)
     if (isSamePassword) {
       return response.status(400).json({
@@ -256,12 +241,12 @@ const updatePassword = async (request, response) => {
         message: "New password must be different"
       })
     }
-
     const hashedPassword = await bcrypt.hash(newPassword, 10)
     await userModel.update(
       { password: hashedPassword },
       { where: { id: userId } }
     )
+    
     return response.json({
       success: true,
       message: "Password updated successfully"

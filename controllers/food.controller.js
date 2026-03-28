@@ -57,7 +57,7 @@ const createFood = async (request, response) => {
     }
 
     let priceOfUnit = null 
-    if (price && initial_weight !== 0) {
+    if (price) {
       priceOfUnit = Number((price / initial_weight).toFixed(2)) 
     }
 
@@ -106,30 +106,30 @@ const getAllFood = async (request, response) => {
     }) 
 
     const today = new Date() 
-    const result = food.map((food) => {
-      const expiryDate = new Date(food.expiryDate) 
-      const purchaseDate = new Date(food.purchaseDate) 
+    const result = food.map((item) => {
+      const expiryDate = new Date(item.expiryDate) 
+      const purchaseDate = new Date(item.purchaseDate) 
 
       const diffTime = expiryDate - today 
-      let daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) 
-      if (daysLeft <= 0) daysLeft = 0 
+      const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
       
-      const currentWeight = Number(food.currentWeight) || 0 
-      const pricePerUnit = Number(food.priceOfUnit) || 0 
+      const currentWeight = Number(item.currentWeight) || 0 
+      const pricePerUnit = Number(item.priceOfUnit) || 0 
       const totalPrice = currentWeight * pricePerUnit 
-      const safeDays = daysLeft === 0 ? 1 : daysLeft 
+      const safeDays = daysLeft || 1 
       const riskScore = totalPrice / safeDays 
+      
       return {
-        id: food.id,
-        food_category_id: food.foodCategoryId, 
-        name: food.foodName,
+        id: item.id,
+        food_category_id: item.foodCategoryId, 
+        name: item.foodName,
         current_weight: currentWeight,
-        unit_weight: food.unitOfWeight,
+        unit_weight: item.unitOfWeight,
         purchase_date: purchaseDate,
         expiry_date: expiryDate,
         days_left: daysLeft,
         total_price: totalPrice,
-        storage_location: food.storageLocation,
+        storage_location: item.storageLocation,
         risk_score: Number(riskScore.toFixed(2))
       } 
     }) 
@@ -196,7 +196,8 @@ const updateFoodUsage = async (request, response) => {
         id: foodId,
         userId: userId
       },
-      transaction: t
+      transaction: t,
+      lock: true
     }) 
     if (!food) {
       await t.rollback() 
@@ -270,7 +271,8 @@ const discardFood = async (request, response) => {
 
     const food = await foodModel.findOne({
       where: { id: foodId, userId },
-      transaction: t
+      transaction: t,
+      lock: true
     }) 
     if (!food) {
       await t.rollback() 
@@ -335,7 +337,7 @@ const discardFood = async (request, response) => {
   }
 }
 
-export const getRiskRankingPanel = async (request, response) => {
+const getRiskRankingPanel = async (request, response) => {
   try {
     const userId = request.user.id
     const food = await foodModel.findAll({

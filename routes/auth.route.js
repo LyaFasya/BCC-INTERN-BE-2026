@@ -1,20 +1,77 @@
 import express from "express"
 const router = express.Router()
+
 import { verifyToken } from "../middlewares/verifyToken.js"
 import authController from "../controllers/auth.controller.js"
-import auth from "../middlewares/auth.js"
+
 /**
  * @swagger
  * tags:
  *   name: Auth
- *   description: Authentication & Authorization
+ *   description: Authentication API
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     AuthResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *     RefreshResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         accessToken:
+ *           type: string
  */
 
 /**
  * @swagger
  * /auth/register:
  *   post:
- *     summary: Register new user
+ *     summary: Register user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, confirm_password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@mail.com
+ *               password:
+ *                 type: string
+ *                 example: User123456
+ *                 description: Minimal 6 karakter, format terdapat minimal 1 huruf besar
+ *               confirm_password:
+ *                 type: string
+ *                 example: User123456
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ */
+router.post("/register", authController.register)
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -26,95 +83,65 @@ import auth from "../middlewares/auth.js"
  *             properties:
  *               email:
  *                 type: string
- *                 example: user@gmail.com
- *               password:
- *                 type: string
- *                 example: 123456
- *     responses:
- *       201:
- *         description: Register Success
- *       400:
- *         description: Email already registered
- *       500:
- *         description: Server error
- */
-router.post("/register", authController.register)
-
-/**
- * @swagger
- * /auth/login:
- *   post:
- *     summary: Login user
- *     tags: [Auth]
- *     description: |
- *       Login user dan akan:
- *       - Mengembalikan accessToken
- *       - Menyimpan refreshToken di cookie (httpOnly)
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 example: user@gmail.com
+ *                 example: user@mail.com
  *               password:
  *                 type: string
  *                 example: 123456
  *     responses:
  *       200:
  *         description: Login success
- *         headers:
- *           Set-Cookie:
- *             description: Refresh token stored in cookie
- *             schema:
- *               type: string
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 accessToken:
- *                   type: string
- *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *       401:
- *         description: Invalid password
- *       404:
- *         description: Email not found
- *       500:
- *         description: Server error
+ *               $ref: '#/components/schemas/AuthResponse'
+ *         headers:
+ *           Set-Cookie:
+ *             description: Mengatur cookie HTTPOnly untuk token dan refreshToken
+ *             schema:
+ *               type: string
  */
 router.post("/login", authController.login)
 
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Get current user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ */
 router.get("/me", verifyToken, authController.checkAuth)
 
 /**
  * @swagger
  * /auth/refresh:
  *   post:
- *     summary: Get new access token
+ *     summary: Refresh access token
  *     tags: [Auth]
- *     description: Menggunakan refresh token dari cookie
+ *     parameters:
+ *       - in: cookie
+ *         name: refreshToken
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Nilai RefreshToken dari HttpOnly Cookie di browser
  *     responses:
  *       200:
- *         description: New access token generated
- *       401:
- *         description: No token
- *       403:
- *         description: Invalid token
+ *         description: New token generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RefreshResponse'
  */
 router.post("/refresh", authController.refreshToken)
-
-router.get("/me", auth, authController.checkAuth)
 
 /**
  * @swagger
@@ -122,7 +149,6 @@ router.get("/me", auth, authController.checkAuth)
  *   post:
  *     summary: Logout user
  *     tags: [Auth]
- *     description: Menghapus refresh token dari cookie dan database
  *     responses:
  *       200:
  *         description: Logout success
@@ -147,23 +173,18 @@ router.post("/logout", authController.logout)
  *             properties:
  *               oldPassword:
  *                 type: string
- *                 example: 123456
+ *                 example: User123456
  *               newPassword:
  *                 type: string
- *                 example: 1234567
+ *                 example: User654321
+ *                 description: Minimal 6 karakter
  *               confirmPassword:
  *                 type: string
- *                 example: 1234567
+ *                 example: User654321
  *     responses:
  *       200:
  *         description: Password updated successfully
- *       400:
- *         description: Validation error
- *       404:
- *         description: User not found
- *       500:
- *         description: Server error
  */
-router.put("/update-password", auth, authController.updatePassword)
+router.put("/update-password", verifyToken, authController.updatePassword)
 
 export default router

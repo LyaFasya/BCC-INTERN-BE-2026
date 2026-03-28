@@ -10,7 +10,12 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:8000"
+        url: "http://localhost:8000",
+        description: "Local Development Server"
+      },
+      {
+        url: "https://api-node-simpaninid.up.railway.app",
+        description: "Production Server"
       }
     ],
 
@@ -19,16 +24,17 @@ const options = {
         bearerAuth: {
           type: "http",
           scheme: "bearer",
-          bearerFormat: "JWT"
+          bearerFormat: "JWT",
+          description: "Masukkan **AccessToken** untuk autorisasi Endpoint terlindungi."
+        },
+        cookieAuth: {
+          type: "apiKey",
+          in: "cookie",
+          name: "refreshToken",
+          description: "Token pasif yang ada di browser Cookie (HTTP-only) untuk route Refresh."
         }
       }
-    },
-
-    security: [
-      {
-        bearerAuth: []
-      }
-    ]
+    }
   },
 
   apis: ["./routes/*.js"],

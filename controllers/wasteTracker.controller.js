@@ -5,115 +5,64 @@ const { food: foodModel, foodLog: foodLogModel, foodCategory: foodCategoryModel 
 export const getCategoryLossSummary = async (request, response) => {
   try {
     const userId = request.user.id
-    const categories = await foodCategoryModel.findAll({
-      attributes: ["id", "category_name"],
-      raw: true
-    })
-
-    const expiredData = await foodModel.findAll({
-      attributes: [
-        "id",
-        [
-          Sequelize.literal("SUM(current_weight * price_of_unit)"),
-          "totalPrice"
-        ]
-      ],
-      where: {
-        userId,
-        status: "expired"
-      },
-      group: ["id"],
-      raw: true
-    })
-
-    // ======================
-    // 🔥 3. DISCARDED (FOOD LOG)
-    // ======================
-    const discardedData = await foodLogModel.findAll({
-      attributes: [
-        [Sequelize.col("food.id"), "id"],
-        [
-          Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"),
-          "totalPrice"
-        ]
-      ],
-      include: [
-        {
-          model: foodModel,
-          as: "food",
-          attributes: [],
-          where: { userId }
-        }
-      ],
-      where: {
-        status: "discarded"
-      },
-      group: ["food.id"],
-      raw: true
-    })
-
-    // ======================
-    // 🔗 4. MERGE DATA
-    // ======================
+    const [categories, expiredData, discardedData] = await Promise.all([
+      foodCategoryModel.findAll({
+        attributes: ["id", "category_name"],
+        raw: true
+      }),
+      foodModel.findAll({
+        attributes: [
+          "id",
+          [Sequelize.literal("SUM(current_weight * price_of_unit)"), "totalPrice"]
+        ],
+        where: { userId, status: "expired" },
+        group: ["id"],
+        raw: true
+      }),
+      foodLogModel.findAll({
+        attributes: [
+          [Sequelize.col("food.id"), "id"],
+          [Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"), "totalPrice"]
+        ],
+        include: [{ model: foodModel, as: "food", attributes: [], where: { userId } }],
+        where: { status: "discarded" },
+        group: ["food.id"],
+        raw: true
+      })
+    ])
     const resultMap = {}
-
-    // init semua kategori
     categories.forEach(cat => {
-      resultMap[cat.id] = {
-        category: cat.category_name,
-        total_price: 0
-      }
+      resultMap[cat.id] = { category: cat.category_name, total_price: 0 }
     })
 
-    // inject expired
-    expiredData.forEach(item => {
-      if (resultMap[item.id]) {
-        resultMap[item.id].total_price += Number(item.totalPrice || 0)
-      }
-    })
+    const addPrice = (dataArr) => {
+      dataArr.forEach(item => {
+        if (resultMap[item.id]) {
+          resultMap[item.id].total_price += Number(item.totalPrice || 0)
+        }
+      })
+    }
 
-    // inject discarded
-    discardedData.forEach(item => {
-      if (resultMap[item.id]) {
-        resultMap[item.id].total_price += Number(item.totalPrice || 0)
-      }
-    })
+    addPrice(expiredData)
+    addPrice(discardedData)
 
     const resultArray = Object.values(resultMap)
+    const totalAllPrice = resultArray.reduce((sum, item) => sum + item.total_price, 0)
 
-    // ======================
-    // 🔢 5. HITUNG TOTAL GLOBAL
-    // ======================
-    const totalAllPrice = resultArray.reduce(
-      (sum, item) => sum + item.total_price,
-      0
-    )
-
-    // ======================
-    // 📊 6. HITUNG PERCENTAGE
-    // ======================
     const finalResult = resultArray.map(item => {
-      const percentage =
-        totalAllPrice > 0
-          ? (item.total_price / totalAllPrice) * 100
-          : 0
-
+      const percentage = totalAllPrice > 0 ? (item.total_price / totalAllPrice) * 100 : 0
       return {
         category: item.category,
         total_price: item.total_price,
         percentage: Number(percentage.toFixed(2))
       }
-    })
+    }).sort((a, b) => b.total_price - a.total_price)
 
-    // ======================
-    // 📦 7. RESPONSE
-    // ======================
     return response.status(200).json({
       success: true,
       message: "Success get category loss summary",
       data: finalResult
     })
-
   } catch (error) {
     return response.status(500).json({
       success: false,
@@ -125,98 +74,58 @@ export const getCategoryLossSummary = async (request, response) => {
 export const getCategoryLossPerMonth = async (request, response) => {
   try {
     const userId = request.user.id
-    const categories = await foodCategoryModel.findAll({
-      attributes: ["id", "category_name"],
-      raw: true
-    })
+    const [categories, expiredData, discardedData] = await Promise.all([
+      foodCategoryModel.findAll({
+        attributes: ["id", "category_name"],
+        raw: true
+      }),
+      foodModel.findAll({
+        attributes: [
+          [Sequelize.literal("DATE_FORMAT(purchase_date, '%Y-%m')"), "month"],
+          "id",
+          [Sequelize.literal("SUM(current_weight * price_of_unit)"), "totalPrice"]
+        ],
+        where: { userId, status: "expired" },
+        group: [Sequelize.literal("DATE_FORMAT(purchase_date, '%Y-%m')"), "id"],
+        raw: true
+      }),
+      foodLogModel.findAll({
+        attributes: [
+          [Sequelize.literal("DATE_FORMAT(foodLog.created_at, '%Y-%m')"), "month"],
+          [Sequelize.col("food.id"), "id"],
+          [Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"), "totalPrice"]
+        ],
+        include: [{ model: foodModel, as: "food", attributes: [], where: { userId } }],
+        where: { status: "discarded" },
+        group: [Sequelize.literal("DATE_FORMAT(foodLog.created_at, '%Y-%m')"), "food.id"],
+        raw: true
+      })
+    ])
+
+    const categoryDict = {}
+    categories.forEach(cat => { categoryDict[cat.id] = cat.category_name })
     
-    const expiredData = await foodModel.findAll({
-      attributes: [
-        [
-          Sequelize.literal("DATE_FORMAT(purchase_date, '%Y-%m')"),
-          "month"
-        ],
-        "id",
-        [
-          Sequelize.literal("SUM(current_weight * price_of_unit)"),
-          "totalPrice"
-        ]
-      ],
-      where: {
-        userId,
-        status: "expired"
-      },
-      group: [
-        Sequelize.literal("DATE_FORMAT(purchase_date, '%Y-%m')"),
-        "id"
-      ],
-      raw: true
-    })
-
-    const discardedData = await foodLogModel.findAll({
-      attributes: [
-        [
-          Sequelize.literal("DATE_FORMAT(foodLog.created_at, '%Y-%m')"),
-          "month"
-        ],
-        [Sequelize.col("food.id"), "id"],
-        [
-          Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"),
-          "totalPrice"
-        ]
-      ],
-      include: [
-        {
-          model: foodModel,
-          as: "food",
-          attributes: [],
-          where: { userId }
-        }
-      ],
-      where: {
-        status: "discarded"
-      },
-      group: [
-        Sequelize.literal("DATE_FORMAT(foodLog.created_at, '%Y-%m')"),
-        "food.id"
-      ],
-      raw: true
-    })
-
     const resultMap = {}
-    const getKey = (month, id) => `${month}-${id}`
-    expiredData.forEach(item => {
-      const key = getKey(item.month, item.id)
-      if (!resultMap[key]) {
-        const category = categories.find(c => c.id === item.id)
-        resultMap[key] = {
-          month: item.month,
-          id: item.id,
-          category: category?.category_name || "Unknown",
-          total_price: 0
+    const addToMap = (dataArr) => {
+      dataArr.forEach(item => {
+        const key = `${item.month}-${item.id}`
+        if (!resultMap[key]) {
+          resultMap[key] = {
+            month: item.month,
+            id: item.id,
+            category: categoryDict[item.id] || "Unknown",
+            total_price: 0
+          }
         }
-      }
-      resultMap[key].total_price += Number(item.totalPrice || 0)
-    })
+        resultMap[key].total_price += Number(item.totalPrice || 0)
+      })
+    }
 
-    discardedData.forEach(item => {
-      const key = getKey(item.month, item.id)
-      if (!resultMap[key]) {
-        const category = categories.find(c => c.id === item.id)
-        resultMap[key] = {
-          month: item.month,
-          id: item.id,
-          category: category?.category_name || "Unknown",
-          total_price: 0
-        }
-      }
-      resultMap[key].total_price += Number(item.totalPrice || 0)
-    })
+    addToMap(expiredData)
+    addToMap(discardedData)
 
-    const resultArray = Object.values(resultMap)
     const groupedByMonth = {}
-
-    resultArray.forEach(item => {
+    Object.values(resultMap).forEach(item => {
       if (!groupedByMonth[item.month]) {
         groupedByMonth[item.month] = []
       }
@@ -225,36 +134,23 @@ export const getCategoryLossPerMonth = async (request, response) => {
 
     const finalResult = Object.keys(groupedByMonth).map(month => {
       const items = groupedByMonth[month]
-      const totalMonth = items.reduce(
-        (sum, item) => sum + item.total_price,
-        0
-      )
+      const totalMonth = items.reduce((sum, item) => sum + item.total_price, 0)
 
       const categoryMap = {}
-      items.forEach(item => {
-        categoryMap[item.id] = item.total_price
-      })
+      items.forEach(item => { categoryMap[item.id] = item.total_price })
 
       const categoriesWithZero = categories.map(cat => {
         const total_price = categoryMap[cat.id] || 0
-        const percentage =
-          totalMonth > 0
-            ? (total_price / totalMonth) * 100
-            : 0
-
+        const percentage = totalMonth > 0 ? (total_price / totalMonth) * 100 : 0
         return {
           category: cat.category_name,
           total_price,
           percentage: Number(percentage.toFixed(2))
         }
-      })
+      }).sort((a, b) => b.total_price - a.total_price)
       
-      categoriesWithZero.sort((a, b) => b.total_price - a.total_price)
-      return {
-        month,
-        categories: categoriesWithZero
-      }
-    })
+      return { month, categories: categoriesWithZero }
+    }).sort((a, b) => a.month.localeCompare(b.month))
     
     return response.status(200).json({
       success: true,
@@ -278,57 +174,24 @@ export const getEfficiencyScore = async (request, response) => {
     lastMonthDate.setMonth(now.getMonth() - 1)
 
     const lastMonth = lastMonthDate.toISOString().slice(0, 7)
-    const currentData = await foodLogModel.findAll({
+    const baseQuery = (monthStr) => ({
       attributes: [
-        [
-          Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"),
-          "totalPrice"
-        ]
+        [Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"), "totalPrice"]
       ],
-      include: [
-        {
-          model: foodModel,
-          as: "food",
-          attributes: [],
-          where: { userId }
-        }
-      ],
+      include: [{ model: foodModel, as: "food", attributes: [], where: { userId } }],
       where: {
         status: "discarded",
         [Sequelize.Op.and]: [
-          Sequelize.literal(
-            `DATE_FORMAT(foodLog.created_at, '%Y-%m') = '${currentMonth}'`
-          )
+          Sequelize.literal(`DATE_FORMAT(foodLog.created_at, '%Y-%m') = '${monthStr}'`)
         ]
       },
       raw: true
     })
 
-    const lastData = await foodLogModel.findAll({
-      attributes: [
-        [
-          Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"),
-          "totalPrice"
-        ]
-      ],
-      include: [
-        {
-          model: foodModel,
-          as: "food",
-          attributes: [],
-          where: { userId }
-        }
-      ],
-      where: {
-        status: "discarded",
-        [Sequelize.Op.and]: [
-          Sequelize.literal(
-            `DATE_FORMAT(foodLog.created_at, '%Y-%m') = '${lastMonth}'`
-          )
-        ]
-      },
-      raw: true
-    })
+    const [currentData, lastData] = await Promise.all([
+      foodLogModel.findAll(baseQuery(currentMonth)),
+      foodLogModel.findAll(baseQuery(lastMonth))
+    ])
 
     const current = Number(currentData[0]?.totalPrice || 0)
     const last = Number(lastData[0]?.totalPrice || 0)
@@ -336,7 +199,6 @@ export const getEfficiencyScore = async (request, response) => {
     if (last > 0) {
       efficiency = ((last - current) / last) * 100
     }
-
     return response.status(200).json({
       success: true,
       message: "Success get efficiency score",
@@ -358,17 +220,11 @@ export const getEfficiencyScore = async (request, response) => {
 export const getDiscardedHistory = async (request, response) => {
   try {
     const userId = request.user.id
-
     const data = await foodLogModel.findAll({
       attributes: [
         ["created_at", "discarded_date"],
         "amount",
-        [
-          Sequelize.literal(`
-            foodLog.amount * food.price_of_unit
-          `),
-          "total_loss"
-        ]
+        [Sequelize.literal(`foodLog.amount * food.price_of_unit`),"total_loss"]
       ],
       include: [
         {

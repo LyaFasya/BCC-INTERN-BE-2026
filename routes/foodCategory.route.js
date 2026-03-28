@@ -18,6 +18,30 @@ router.use(authenticate)
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     CategoryResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *     CategoryListResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         data:
+ *           type: array
+ *           items:
+ *             type: object
+ */
+
+/**
+ * @swagger
  * /category:
  *   get:
  *     summary: Get all categories
@@ -26,7 +50,11 @@ router.use(authenticate)
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of categories
+ *         description: List of all categories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CategoryListResponse'
  */
 router.get("/", category.getAllCategory)
 
@@ -49,18 +77,28 @@ router.get("/", category.getAllCategory)
  *             properties:
  *               category_name:
  *                 type: string
- *               description:
- *                 type: string
+ *                 example: Daging
  *               category_profile:
  *                 type: string
  *                 format: binary
  *     responses:
  *       201:
- *         description: Category created
+ *         description: Category created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CategoryResponse'
+ *       400:
+ *         description: Category already exists or missing name
  *       403:
- *         description: Forbidden
+ *         description: Forbidden (admin only)
  */
-router.post("/", checkRole("admin"), upload.single("category_profile"), category.createCategory)
+router.post(
+  "/",
+  checkRole("admin"),
+  upload.single("category_profile"),
+  category.createCategory
+)
 
 /**
  * @swagger
@@ -85,18 +123,26 @@ router.post("/", checkRole("admin"), upload.single("category_profile"), category
  *             properties:
  *               category_name:
  *                 type: string
- *               description:
- *                 type: string
+ *                 example: Sayur
  *               category_profile:
  *                 type: string
  *                 format: binary
  *     responses:
  *       200:
- *         description: Category updated
+ *         description: Category updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CategoryResponse'
  *       404:
  *         description: Category not found
  */
-router.put("/:id", checkRole("admin"), upload.single("category_profile"), category.updateCategory)
+router.put(
+  "/:id",
+  checkRole("admin"),
+  upload.single("category_profile"),
+  category.updateCategory
+)
 
 /**
  * @swagger

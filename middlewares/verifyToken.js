@@ -4,7 +4,6 @@ const access_secret = process.env.JWT_SECRET || "simpanin"
 
 export const verifyToken = (request, result, next) => {
   try {
-    // 🔥 ambil dari cookie ATAU header
     const token =
       request.cookies.token ||
       request.headers.authorization?.split(' ')[1]
@@ -17,7 +16,6 @@ export const verifyToken = (request, result, next) => {
     }
 
     const decoded = jwt.verify(token, access_secret)
-
     request.user = decoded
     next()
   } catch (error) {
