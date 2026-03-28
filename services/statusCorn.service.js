@@ -28,6 +28,6 @@ const updateFoodStatus = async () => {
 
 updateFoodStatus()
 cron.schedule("0 0 * * *", async () => {
-  console.log("⏰ Running daily food status update...")
+  console.log("Running daily food status update...")
   await updateFoodStatus()
 })
