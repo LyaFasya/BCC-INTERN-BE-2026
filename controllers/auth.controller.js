@@ -42,7 +42,7 @@ const register = async (request, response) => {
       verification_token: token
     })
 
-    const link = `https://api-node-simpaninid.up.railway.app/verify/${token}`
+    const link = `https://api-node-simpaninid.up.railway.app/auth/verify/${token}`
     await sendEmail(
       user.email,
       'Verifikasi Email Kamu',
