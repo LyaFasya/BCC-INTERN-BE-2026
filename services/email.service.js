@@ -1,20 +1,14 @@
-import sgMail from "@sendgrid/mail"
+import sgMail from '@sendgrid/mail';
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+const sendEmail = async (to, subject, html) => {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY); // pindah ke dalam function
 
-export const sendEmail = async (to, subject, html) => {
-  try {
-    const msg = {
-      to,
-      from: process.env.EMAIL_SENDER,
-      subject,
-      html
-    }
+  await sgMail.send({
+    to,
+    from: process.env.EMAIL_SENDER,
+    subject,
+    html,
+  });
+};
 
-    await sgMail.send(msg)
-    console.log("Email sent successfully")
-  } catch (error) {
-    console.error("Error sending email:", error.message)
-    throw error
-  }
-}
+export default sendEmail;

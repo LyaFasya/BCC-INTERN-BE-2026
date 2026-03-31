@@ -25,6 +25,15 @@ export default {
         type: Sequelize.TEXT,
         allowNull: true
       },
+      is_verified: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+      },
+      verification_token: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,

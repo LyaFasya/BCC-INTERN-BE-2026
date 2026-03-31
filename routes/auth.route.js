@@ -186,5 +186,6 @@ router.post("/logout", authController.logout)
  *         description: Password updated successfully
  */
 router.put("/update-password", verifyToken, authController.updatePassword)
+router.get('/verify/:token', authController.verifyEmail)
 
 export default router

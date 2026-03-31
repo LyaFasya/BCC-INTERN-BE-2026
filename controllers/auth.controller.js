@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
+import crypto from 'crypto'
+import sendEmail from '../services/email.service.js'
 import db from "../models/index.js"
 const userModel = db.user
 const access_secret = process.env.JWT_SECRET || "simpanin"
@@ -32,14 +34,30 @@ const register = async (request, response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
+    const token = crypto.randomBytes(32).toString('hex')
     const user = await userModel.create({
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      is_verified: false,
+      verification_token: token
     })
+
+    const link = `http://localhost:8000/verify/${token}`
+    await sendEmail(
+      user.email,
+      'Verifikasi Email Kamu',
+      `
+        <h2>Halo 👋</h2>
+        <p>Terima kasih sudah register</p>
+        <p>Klik link ini untuk verifikasi akun kamu:</p>
+        <a href="${link}">${link}</a>
+      `
+    )
+
     const { password: _, ...userWithoutPassword } = user.toJSON()
     return response.status(201).json({
       success: true,
-      message: "Register Success",
+      message: "Register Success, please check your email for verification",
       data: userWithoutPassword
     })
 
@@ -110,7 +128,6 @@ const login = async (request, response) => {
     })
   }
 }
-
 
 const checkAuth = async (request, response) => {
   try {
@@ -259,4 +276,28 @@ const updatePassword = async (request, response) => {
   }
 }
 
-export default {register, login, refreshToken, logout, updatePassword, checkAuth}
+const verifyEmail = async (request, resume) => {
+  try {
+    const {token} = request.params
+
+    const user = await userModel.findOne({
+      where: { verification_token: token }
+    })
+
+    if (!user) {
+      return resume.status(400).send('Token tidak valid ❌')
+    }
+
+    await user.update({
+      is_verified: true,
+      verification_token: null
+    })
+
+    return resume.send('Email berhasil diverifikasi ✅')
+
+  } catch (error) {
+    return resume.status(500).send(error.message)
+  }
+}
+
+export default {register, login, refreshToken, logout, updatePassword, checkAuth, verifyEmail}

@@ -45,6 +45,15 @@ export default (sequelize, DataTypes) => {
       allowNull: true,
       field: "refresh_token"
     },
+    is_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    verification_token: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
   }, {
     sequelize,
     modelName: 'user',
