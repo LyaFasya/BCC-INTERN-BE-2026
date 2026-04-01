@@ -24,6 +24,7 @@ const createAdmin = async () => {
       email,
       password: hashedPassword,
       role: "admin",
+      is_verified: true
     })
 
     console.log("Admin created successfully")

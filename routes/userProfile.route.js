@@ -42,7 +42,7 @@ import upload from "../middlewares/upload.js"
  *         message:
  *           type: string
  *         data:
- *           type: object
+ *           $ref: '#/components/schemas/Profile'
  *     ProfileListResponse:
  *       type: object
  *       properties:
@@ -53,7 +53,7 @@ import upload from "../middlewares/upload.js"
  *         data:
  *           type: array
  *           items:
- *             type: object
+ *             $ref: '#/components/schemas/Profile'
  */
 
 /**
@@ -71,8 +71,33 @@ import upload from "../middlewares/upload.js"
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ProfileListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
  *       403:
  *         description: Forbidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Dilarang: Akses eksklusif, Role tidak diizinkan"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/", auth, checkRole("admin"), userProfileController.getAllProfile)
 
@@ -115,6 +140,33 @@ router.get("/", auth, checkRole("admin"), userProfileController.getAllProfile)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ProfileResponse'
+ *       400:
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.post("/", auth, upload.single("profile_picture"), userProfileController.createProfile)
 
@@ -138,8 +190,33 @@ router.post("/", auth, upload.single("profile_picture"), userProfileController.c
  *                   type: boolean
  *                 data:
  *                   $ref: '#/components/schemas/Profile'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
  *       404:
- *         description: Profile not found
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/me", auth, userProfileController.getMyProfile)
 
@@ -165,6 +242,24 @@ router.get("/me", auth, userProfileController.getMyProfile)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ProfileListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/search", auth, userProfileController.getProfileByKeyword)
 
@@ -200,6 +295,42 @@ router.get("/search", auth, userProfileController.getProfileByKeyword)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ProfileResponse'
+ *       400:
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.put("/", auth, upload.single("profile_picture"), userProfileController.updateProfile)
 

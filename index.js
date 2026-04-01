@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import express from "express"
 import cors from "cors"
-import "./services/statusCorn.service.js"
+import "./services/statusCron.service.js"
 
 import authRoutes from "./routes/auth.route.js"
 import profileRoutes from "./routes/userProfile.route.js"

@@ -79,7 +79,6 @@ IMPORTANT:
       return { error: "AI response was not valid JSON." }
     }
 
-    // 🚨 HANDLE ERROR DARI AI
     if (parsed.error) {
       return { error: parsed.error }
     }

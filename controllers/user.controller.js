@@ -1,33 +1,7 @@
 import db from "../models/index.js"
 import { Op } from "sequelize"
+import { v2 as cloudinary } from "cloudinary"
 const userModel = db.user
-
-const getAllUser = async (request, response) => {
-  try {
-    const currentUserId = request.user.id
-    const users = await userModel.findAll({
-      attributes: ["id", "email", "role"], 
-      where: {
-        [Op.or]: [
-          { role: "user" },
-          { id: currentUserId } 
-        ]
-      }
-    })
-
-    return response.json({
-      success: true,
-      data: users,
-      message: "All users have been loaded"
-    })
-
-  } catch (error) {
-    return response.status(500).json({
-      success: false,
-      message: error.message
-    })
-  }
-}
 
 const getMe = async (request, response) => {
   try {
@@ -56,22 +30,42 @@ const getMe = async (request, response) => {
 }
 
 const deleteMyAccount = async (request, response) => {
+  const transaction = await db.sequelize.transaction();
   try {
-    await userModel.destroy({
-      where: { id: request.user.id }
-    })
+    const userId = request.user.id;
+
+    const profile = await db.userProfile.findOne({ where: { userId }, transaction });
+    if (profile && profile.profilePublicId) {
+      await cloudinary.uploader.destroy(profile.profilePublicId);
+    }
+
+    const userFoods = await db.food.findAll({ where: { userId }, transaction });
+    const foodIds = userFoods.map(f => f.id);
+
+    if (foodIds.length > 0) {
+      await db.notification.destroy({ where: { foodId: { [Op.in]: foodIds } }, transaction });
+      await db.foodLog.destroy({ where: { foodId: { [Op.in]: foodIds } }, transaction });
+      await db.food.destroy({ where: { userId }, transaction });
+    }
+
+    await db.notification.destroy({ where: { userId }, transaction });
+    await db.userProfile.destroy({ where: { userId }, transaction });
+    await userModel.destroy({ where: { id: userId }, transaction });
+    await transaction.commit();
+    response.clearCookie("refreshToken");
 
     return response.json({
       success: true,
       message: "Your account has been deleted"
-    })
+    });
 
   } catch (error) {
+    await transaction.rollback();
     return response.status(500).json({
       success: false,
       message: error.message
-    })
+    });
   }
 }
 
-export default {getAllUser, getMe, deleteMyAccount}
+export default {getMe, deleteMyAccount}

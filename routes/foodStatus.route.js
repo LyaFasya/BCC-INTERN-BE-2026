@@ -61,6 +61,24 @@ router.use(auth)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/consumed", foodStatusController.getConsumedStatusPerMonth)
 
@@ -79,6 +97,24 @@ router.get("/consumed", foodStatusController.getConsumedStatusPerMonth)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/discarded", foodStatusController.getDiscardedStatusPerMonth)
 
@@ -97,6 +133,24 @@ router.get("/discarded", foodStatusController.getDiscardedStatusPerMonth)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/warning", foodStatusController.getWarningStatusPerMonth)
 
@@ -115,6 +169,24 @@ router.get("/warning", foodStatusController.getWarningStatusPerMonth)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/expired", foodStatusController.getExpiredStatusPerMonth)
 
@@ -133,6 +205,24 @@ router.get("/expired", foodStatusController.getExpiredStatusPerMonth)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/fresh", foodStatusController.getFreshStatusPerMonth)
 

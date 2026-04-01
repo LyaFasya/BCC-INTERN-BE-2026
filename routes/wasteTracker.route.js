@@ -118,6 +118,24 @@ router.use(auth)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CategoryLossListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/category_loss", wasteTrackerController.getCategoryLossSummary)
 
@@ -136,6 +154,24 @@ router.get("/category_loss", wasteTrackerController.getCategoryLossSummary)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CategoryLossMonthlyListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/category_loss_month", wasteTrackerController.getCategoryLossPerMonth)
 
@@ -154,6 +190,24 @@ router.get("/category_loss_month", wasteTrackerController.getCategoryLossPerMont
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/EfficiencyScoreResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/efficiency_score", wasteTrackerController.getEfficiencyScore)
 
@@ -172,6 +226,24 @@ router.get("/efficiency_score", wasteTrackerController.getEfficiencyScore)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/DiscardHistoryListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/discard_history", wasteTrackerController.getDiscardedHistory)
 

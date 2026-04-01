@@ -26,6 +26,37 @@ router.use(auth)
  *           type: string
  *         data:
  *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *               example: 1
+ *             food_name:
+ *               type: string
+ *               example: "Daging Ayam"
+ *             food_category_id:
+ *               type: integer
+ *               example: 2
+ *             initial_weight:
+ *               type: number
+ *               example: 2
+ *             current_weight:
+ *               type: number
+ *               example: 1.5
+ *             unit_of_weight:
+ *               type: string
+ *               example: "kg"
+ *             storage_location:
+ *               type: string
+ *               example: "Kulkas Bawah"
+ *             purchase_date:
+ *               type: string
+ *               example: "2026-03-25"
+ *             expiry_date:
+ *               type: string
+ *               example: "2026-04-05"
+ *             status:
+ *               type: string
+ *               example: "fresh"
  *     FoodListResponse:
  *       type: object
  *       properties:
@@ -37,6 +68,22 @@ router.use(auth)
  *           type: array
  *           items:
  *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *                 example: 1
+ *               food_name:
+ *                 type: string
+ *                 example: "Daging Ayam"
+ *               current_weight:
+ *                 type: number
+ *                 example: 1.5
+ *               unit_of_weight:
+ *                 type: string
+ *                 example: "kg"
+ *               status:
+ *                 type: string
+ *                 example: "fresh"
  */
 
 /**
@@ -84,6 +131,33 @@ router.use(auth)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodResponse'
+ *       400:
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.post("/", foodController.createFood)
 
@@ -102,6 +176,24 @@ router.post("/", foodController.createFood)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/", foodController.getAllFood)
 
@@ -120,6 +212,24 @@ router.get("/", foodController.getAllFood)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/risk_ranking_panel", foodController.getRiskRankingPanel)
 
@@ -144,6 +254,33 @@ router.get("/risk_ranking_panel", foodController.getRiskRankingPanel)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/:id", foodController.getDetailFood)
 
@@ -179,6 +316,39 @@ router.get("/:id", foodController.getDetailFood)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodResponse'
+ *       400:
+ *         description: Bad request (e.g. usage exceeds available weight)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.patch("/:id/use", foodController.updateFoodUsage)
 
@@ -214,6 +384,39 @@ router.patch("/:id/use", foodController.updateFoodUsage)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodResponse'
+ *       400:
+ *         description: Bad request (e.g. discard exceeds available weight)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.patch("/:id/discard", foodController.discardFood)
 
@@ -238,6 +441,33 @@ router.patch("/:id/discard", foodController.discardFood)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FoodResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.delete("/:id", foodController.deleteFood)
 

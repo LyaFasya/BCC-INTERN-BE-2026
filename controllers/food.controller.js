@@ -17,15 +17,13 @@ const createFood = async (request, response) => {
       price
     } = request.body 
 
-    // ✅ VALIDASI REQUIRED
     if (!food_category_id || !food_name || !initial_weight || !unit_of_weight || !storage_location || !purchase_date) {
       return response.status(400).json({
         success: false,
         message: "All required fields must be filled"
       }) 
     }
-
-    // ✅ VALIDASI TANGGAL
+    
     const today = new Date() 
     const inputDate = new Date(purchase_date) 
 
@@ -39,7 +37,6 @@ const createFood = async (request, response) => {
       }) 
     }
 
-    // ✅ FORMAT DATA
     food_name = food_name.trim().toLowerCase()
     initial_weight = Number(initial_weight)
     price = price ? Number(price) : null 
@@ -51,7 +48,6 @@ const createFood = async (request, response) => {
       }) 
     }
 
-    // ✅ AMBIL KATEGORI DARI DB
     const category = await foodCategoryModel.findByPk(food_category_id)
 
     if (!category) {
@@ -63,7 +59,6 @@ const createFood = async (request, response) => {
 
     const category_name = category.categoryName
 
-    // ✅ PANGGIL AI
     const aiPrediction = await predictionFood({
       food_name,
       category_name,
@@ -73,7 +68,6 @@ const createFood = async (request, response) => {
       unit_of_weight
     })
 
-    // 🚨 STOP KALAU AI ERROR
     if (aiPrediction.error || !aiPrediction) {
       return response.status(400).json({
         success: false,
@@ -81,7 +75,6 @@ const createFood = async (request, response) => {
       })
     }
 
-    // ✅ HANDLE EXPIRY DATE
     let expiryDate = null 
 
     if (aiPrediction.expiry_date) {
@@ -91,20 +84,17 @@ const createFood = async (request, response) => {
       }
     }
 
-    // ✅ FALLBACK (bukan error, tapi kalau AI ga kasih expiry)
     if (!expiryDate) {
       const purchase = new Date(purchase_date)
       expiryDate = new Date(purchase)
       expiryDate.setDate(purchase.getDate() + (aiPrediction.shelf_life_days || 3))
     }
 
-    // ✅ HITUNG PRICE PER UNIT
     let priceOfUnit = null 
     if (price) {
       priceOfUnit = Number((price / initial_weight).toFixed(2))
     }
 
-    // ✅ HITUNG STATUS
     let status = "fresh"
     const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24))
 
@@ -113,8 +103,7 @@ const createFood = async (request, response) => {
     } else if (diffDays <= 3) {
       status = "warning"
     }
-
-    // ✅ SIMPAN KE DB (HANYA JIKA VALID)
+    
     const newFood = await foodModel.create({
       userId,
       foodCategoryId: food_category_id,
@@ -470,14 +459,11 @@ const deleteFood = async (request, response) => {
         message: "Food not found"
       })
     }
-
-    // ✅ Hapus history/log terkait terlebih dahulu untuk menghindari foreign key constraint error (jika db belum diset cascade)
     await foodLogModel.destroy({
       where: { foodId: food.id },
       transaction: t
     })
 
-    // ✅ Hapus data utamanya
     await food.destroy({ transaction: t })
 
     await t.commit()

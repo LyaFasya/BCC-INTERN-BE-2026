@@ -129,6 +129,7 @@ const login = async (request, response) => {
     return response.status(200).json({
       success: true,
       message: "Login success",
+      accessToken,
       data: {
         id: dataUser.id,
         email: dataUser.email,

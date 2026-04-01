@@ -4,7 +4,6 @@ const router = express.Router()
 
 import userController from "../controllers/user.controller.js"
 import auth from "../middlewares/auth.js"
-import checkRole from "../middlewares/checkRole.js"
 
 /**
  * @swagger
@@ -42,35 +41,6 @@ import checkRole from "../middlewares/checkRole.js"
 
 /**
  * @swagger
- * /users:
- *   get:
- *     summary: Get all users (admin only)
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: All users loaded
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/BaseResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/User'
- *       403:
- *         description: Forbidden (not admin)
- *       500:
- *         description: Server error
- */
-router.get("/", auth, checkRole("admin"), userController.getAllUser)
-
-/**
- * @swagger
  * /users/me:
  *   get:
  *     summary: Get current user profile
@@ -89,10 +59,33 @@ router.get("/", auth, checkRole("admin"), userController.getAllUser)
  *                   type: boolean
  *                 data:
  *                   $ref: '#/components/schemas/UserProfile'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
  *       404:
- *         description: User not found
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
  *       500:
- *         description: Server error
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/me", auth, userController.getMe)
 
@@ -111,8 +104,33 @@ router.get("/me", auth, userController.getMe)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
  *       500:
- *         description: Server error
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.delete("/me", auth, userController.deleteMyAccount)
 

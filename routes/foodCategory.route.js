@@ -29,6 +29,16 @@ router.use(authenticate)
  *           type: string
  *         data:
  *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *               example: 1
+ *             category_name:
+ *               type: string
+ *               example: "Daging"
+ *             category_profile:
+ *               type: string
+ *               example: "https://example.com/image.jpg"
  *     CategoryListResponse:
  *       type: object
  *       properties:
@@ -38,6 +48,16 @@ router.use(authenticate)
  *           type: array
  *           items:
  *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *                 example: 1
+ *               category_name:
+ *                 type: string
+ *                 example: "Daging"
+ *               category_profile:
+ *                 type: string
+ *                 example: "https://example.com/image.jpg"
  */
 
 /**
@@ -55,6 +75,24 @@ router.use(authenticate)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CategoryListResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.get("/", category.getAllCategory)
 
@@ -89,9 +127,41 @@ router.get("/", category.getAllCategory)
  *             schema:
  *               $ref: '#/components/schemas/CategoryResponse'
  *       400:
- *         description: Category already exists or missing name
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
  *       403:
- *         description: Forbidden (admin only)
+ *         description: Forbidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Dilarang: Akses eksklusif, Role tidak diizinkan"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.post(
   "/",
@@ -134,8 +204,51 @@ router.post(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CategoryResponse'
+ *       400:
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       403:
+ *         description: Forbidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Dilarang: Akses eksklusif, Role tidak diizinkan"
  *       404:
- *         description: Category not found
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.put(
   "/:id",
@@ -162,8 +275,42 @@ router.put(
  *     responses:
  *       200:
  *         description: Category deleted
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       403:
+ *         description: Forbidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Dilarang: Akses eksklusif, Role tidak diizinkan"
  *       404:
- *         description: Category not found
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Data referensi tidak ditemukan di sistem"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
  */
 router.delete("/:id", checkRole("admin"), category.deleteCategory)
 
