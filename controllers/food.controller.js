@@ -1,23 +1,37 @@
 import db from "../models/index.js"
 import { predictionFood } from "../services/gemini.service.js"
 import { Sequelize, Op } from "sequelize"
-const { food: foodModel, foodLog: foodLogModel } = db 
+const { food: foodModel, foodLog: foodLogModel, foodCategory: foodCategoryModel } = db 
 
 const createFood = async (request, response) => {
   try {
     const userId = request.user.id 
-    let {food_category_id, food_name, initial_weight, unit_of_weight, storage_location, purchase_date, price} = request.body 
-    if (!food_name || !initial_weight || !unit_of_weight || !storage_location || !purchase_date) {
+
+    let {
+      food_category_id,
+      food_name,
+      initial_weight,
+      unit_of_weight,
+      storage_location,
+      purchase_date,
+      price
+    } = request.body 
+
+    // ✅ VALIDASI REQUIRED
+    if (!food_category_id || !food_name || !initial_weight || !unit_of_weight || !storage_location || !purchase_date) {
       return response.status(400).json({
         success: false,
         message: "All required fields must be filled"
       }) 
     }
 
+    // ✅ VALIDASI TANGGAL
     const today = new Date() 
     const inputDate = new Date(purchase_date) 
+
     today.setHours(0, 0, 0, 0) 
     inputDate.setHours(0, 0, 0, 0) 
+
     if (inputDate > today) {
       return response.status(400).json({
         success: false,
@@ -25,9 +39,11 @@ const createFood = async (request, response) => {
       }) 
     }
 
-    food_name = food_name.trim() 
-    initial_weight = Number(initial_weight) 
+    // ✅ FORMAT DATA
+    food_name = food_name.trim().toLowerCase()
+    initial_weight = Number(initial_weight)
     price = price ? Number(price) : null 
+
     if (isNaN(initial_weight) || initial_weight <= 0) {
       return response.status(400).json({
         success: false,
@@ -35,40 +51,70 @@ const createFood = async (request, response) => {
       }) 
     }
 
+    // ✅ AMBIL KATEGORI DARI DB
+    const category = await foodCategoryModel.findByPk(food_category_id)
+
+    if (!category) {
+      return response.status(404).json({
+        success: false,
+        message: "Category not found"
+      })
+    }
+
+    const category_name = category.categoryName
+
+    // ✅ PANGGIL AI
     const aiPrediction = await predictionFood({
       food_name,
+      category_name,
       storage_location,
       purchase_date,
       initial_weight,
       unit_of_weight
-    }) 
+    })
 
+    // 🚨 STOP KALAU AI ERROR
+    if (aiPrediction.error || !aiPrediction) {
+      return response.status(400).json({
+        success: false,
+        message: aiPrediction?.error || "Invalid food input"
+      })
+    }
+
+    // ✅ HANDLE EXPIRY DATE
     let expiryDate = null 
+
     if (aiPrediction.expiry_date) {
-      expiryDate = new Date(aiPrediction.expiry_date) 
+      expiryDate = new Date(aiPrediction.expiry_date)
       if (isNaN(expiryDate.getTime())) {
-        expiryDate = null 
+        expiryDate = null
       }
     }
+
+    // ✅ FALLBACK (bukan error, tapi kalau AI ga kasih expiry)
     if (!expiryDate) {
-      const purchase = new Date(purchase_date) 
-      expiryDate = new Date(purchase) 
-      expiryDate.setDate(purchase.getDate() + (aiPrediction.shelf_life_days || 3)) 
+      const purchase = new Date(purchase_date)
+      expiryDate = new Date(purchase)
+      expiryDate.setDate(purchase.getDate() + (aiPrediction.shelf_life_days || 3))
     }
 
+    // ✅ HITUNG PRICE PER UNIT
     let priceOfUnit = null 
     if (price) {
-      priceOfUnit = Number((price / initial_weight).toFixed(2)) 
+      priceOfUnit = Number((price / initial_weight).toFixed(2))
     }
 
-    let status = "fresh" 
-    const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24)) 
+    // ✅ HITUNG STATUS
+    let status = "fresh"
+    const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24))
+
     if (diffDays <= 0) {
-      status = "expired" 
+      status = "expired"
     } else if (diffDays <= 3) {
-      status = "warning" 
+      status = "warning"
     }
 
+    // ✅ SIMPAN KE DB (HANYA JIKA VALID)
     const newFood = await foodModel.create({
       userId,
       foodCategoryId: food_category_id,
@@ -82,21 +128,22 @@ const createFood = async (request, response) => {
       price,
       priceOfUnit,
       status
-    }) 
+    })
 
     return response.status(201).json({
       success: true,
       message: "Food created successfully",
       data: newFood
-    }) 
+    })
 
   } catch (error) {
+    console.error(error)
     return response.status(500).json({
       success: false,
       message: error.message
-    }) 
+    })
   }
-} 
+}
 
 const getAllFood = async (request, response) => {
   try {
