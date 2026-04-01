@@ -20,8 +20,10 @@ const app = express()
 const PORT = process.env.PORT || 8000
 
 const allowedOrigins = [
-  "http://localhost:3000",
-  "https://simpaninid-alpha.vercel.app"
+  process.env.SIMPANIN_URL,
+  process.env.SIMPANIN_URL_FE,
+  process.env.SIMPANIN_LOKAL,
+  process.env.SIMPANIN_LOKAL_FE
 ];
 
 app.use(cors({
