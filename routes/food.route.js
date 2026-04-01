@@ -217,4 +217,28 @@ router.patch("/:id/use", foodController.updateFoodUsage)
  */
 router.patch("/:id/discard", foodController.discardFood)
 
+/**
+ * @swagger
+ * /food/{id}:
+ *   delete:
+ *     summary: Delete food
+ *     tags: [Food]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Food deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FoodResponse'
+ */
+router.delete("/:id", foodController.deleteFood)
+
 export default router

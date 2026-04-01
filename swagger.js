@@ -1,5 +1,14 @@
 import swaggerJsdoc from "swagger-jsdoc"
 
+// 🚨 Menyembunyikan DeprecationWarning tentang `url.parse` yang berasal dari dependensi usang bawaan swagger-jsdoc (@apidevtools)
+const originalEmit = process.emit;
+process.emit = function (name, data, ...args) {
+  if (name === "warning" && typeof data === "object" && data.name === "DeprecationWarning" && data.message.includes("url.parse")) {
+    return false;
+  }
+  return originalEmit.apply(process, arguments);
+};
+
 const options = {
   definition: {
     openapi: "3.0.0",

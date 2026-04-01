@@ -448,4 +448,50 @@ const getRiskRankingPanel = async (request, response) => {
   }
 }
 
-export default { createFood, getAllFood, getDetailFood, updateFoodUsage, discardFood, getRiskRankingPanel}
+const deleteFood = async (request, response) => {
+  const t = await db.sequelize.transaction()
+  try {
+    const userId = request.user.id
+    const foodId = request.params.id
+
+    const food = await foodModel.findOne({
+      where: {
+        id: foodId,
+        userId: userId
+      },
+      transaction: t,
+      lock: true
+    })
+
+    if (!food) {
+      await t.rollback()
+      return response.status(404).json({
+        success: false,
+        message: "Food not found"
+      })
+    }
+
+    // ✅ Hapus history/log terkait terlebih dahulu untuk menghindari foreign key constraint error (jika db belum diset cascade)
+    await foodLogModel.destroy({
+      where: { foodId: food.id },
+      transaction: t
+    })
+
+    // ✅ Hapus data utamanya
+    await food.destroy({ transaction: t })
+
+    await t.commit()
+    return response.status(200).json({
+      success: true,
+      message: "Food deleted successfully"
+    })
+  } catch (error) {
+    await t.rollback()
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export default { createFood, getAllFood, getDetailFood, updateFoodUsage, discardFood, getRiskRankingPanel, deleteFood }
