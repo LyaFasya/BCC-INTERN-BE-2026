@@ -6,6 +6,7 @@ import db from "../models/index.js"
 const userModel = db.user
 const access_secret = process.env.JWT_SECRET || "simpanin"
 const refresh_secret = process.env.JWT_REFRESH_SECRET || "simpanin_refresh"
+const SIMPANIN_URL = process.env.SIMPANIN_URL
 
 const register = async (request, response) => {
   try {
@@ -42,7 +43,7 @@ const register = async (request, response) => {
       verification_token: token
     })
 
-    const link = `https://api-node-simpaninid.up.railway.app/auth/verify/${token}`
+    const link = `${SIMPANIN_URL}/auth/verify/${token}`
     await sendEmail(
       user.email,
       'Verifikasi Email Kamu',
@@ -54,11 +55,13 @@ const register = async (request, response) => {
       `
     )
 
-    const { password: _, ...userWithoutPassword } = user.toJSON()
     return response.status(201).json({
       success: true,
       message: "Register Success, please check your email for verification",
-      data: userWithoutPassword
+      data: {
+        id: user.id,
+        email: user.email
+      }
     })
 
   } catch (error) {
@@ -87,6 +90,14 @@ const login = async (request, response) => {
         message: "Invalid password"
       })
     }
+
+    if (!dataUser.is_verified) {
+      return response.status(403).json({
+        success: false,
+        message: "Akun belum diverifikasi, silakan cek email kamu"
+      });
+    }
+
     const payload = {
       id: dataUser.id,
       email: dataUser.email,
@@ -100,27 +111,31 @@ const login = async (request, response) => {
     })
     await dataUser.update({ refreshToken })
 
-   const isProduction = process.env.NODE_ENV === "production"
+    const isProduction = process.env.NODE_ENV === "production"
     response.cookie("token", accessToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000
     })
+
     response.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
 
-    const { password: _, refreshToken: __, ...userApprove } =
-      dataUser.toJSON()
     return response.status(200).json({
       success: true,
       message: "Login success",
-      data: userApprove
+      data: {
+        id: dataUser.id,
+        email: dataUser.email,
+        role: dataUser.role
+      }
     })
+
   } catch (error) {
     return response.status(500).json({
       success: false,
@@ -276,27 +291,49 @@ const updatePassword = async (request, response) => {
   }
 }
 
-const verifyEmail = async (request, resume) => {
+const verifyEmail = async (request, response) => {
   try {
-    const {token} = request.params
-
+    const { token } = request.params;
     const user = await userModel.findOne({
       where: { verification_token: token }
-    })
+    });
 
     if (!user) {
-      return resume.status(400).send('Token tidak valid ❌')
+      return response.status(400).send(`
+        <html>
+          <body style="text-align:center;font-family:sans-serif;margin-top:50px;">
+            <h2>❌ Token tidak valid</h2>
+            <p>Link verifikasi tidak ditemukan atau sudah digunakan.</p>
+          </body>
+        </html>
+      `);
     }
 
     await user.update({
       is_verified: true,
       verification_token: null
-    })
+    });
 
-    return resume.send('Email berhasil diverifikasi ✅')
+    return response.send(`
+      <html>
+        <head>
+          <title>Verifikasi Berhasil</title>
+        </head>
+        <body style="text-align:center;font-family:sans-serif;margin-top:50px;">
+          <h2>✅ Email berhasil diverifikasi</h2>
+        </body>
+      </html>
+    `);
 
   } catch (error) {
-    return resume.status(500).send(error.message)
+    return response.status(500).send(`
+      <html>
+        <body style="text-align:center;font-family:sans-serif;margin-top:50px;">
+          <h2>⚠️ Terjadi kesalahan</h2>
+          <p>${error.message}</p>
+        </body>
+      </html>
+    `);
   }
 }
 
