@@ -186,6 +186,40 @@ router.post("/logout", authController.logout)
  *         description: Password updated successfully
  */
 router.put("/update-password", verifyToken, authController.updatePassword)
+
+/**
+ * @swagger
+ * /auth/verify/{token}:
+ *   get:
+ *     summary: Verify user email using token
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Verification token sent to email
+ *     responses:
+ *       200:
+ *         description: Email successfully verified
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Invalid or expired token
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ */
 router.get('/verify/:token', authController.verifyEmail)
 
 export default router
