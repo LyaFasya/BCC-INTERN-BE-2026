@@ -230,7 +230,7 @@ export const getDiscardedHistory = async (request, response) => {
         {
           model: foodModel,
           as: "food",
-          attributes: ["name", "unit_of_weight"],
+          attributes: ["foodName", "unitOfWeight"],
           where: { userId }
         }
       ],
@@ -246,10 +246,10 @@ export const getDiscardedHistory = async (request, response) => {
       success: true,
       message: "Success get discarded history",
       data: (data || []).map(item => ({
-        name: item.food.name,
+        name: item.food.foodName,
         discarded_date: item.discarded_date,
         amount: Number(item.amount),
-        unit_of_weight: item.food.unit_of_weight,
+        unit_of_weight: item.food.unitOfWeight,
         total_loss: Number(item.total_loss || 0)
       }))
     })
