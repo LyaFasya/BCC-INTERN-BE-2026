@@ -64,7 +64,6 @@ Valid response format:
       model: "gemini-2.5-flash-preview",
       contents: prompt,
     })
-
     let text = response.text.trim()
     text = text.replace(/```json/g, "").replace(/```/g, "").trim()
     let parsed
