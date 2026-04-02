@@ -181,4 +181,4 @@ export const runFoodStatusCheck = async () => {
   }
 }
 
-cron.schedule('* * * * *', runFoodStatusCheck)
+cron.schedule('0 */2 * * *', runFoodStatusCheck)
