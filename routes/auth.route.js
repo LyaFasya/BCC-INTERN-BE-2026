@@ -218,6 +218,47 @@ router.get("/me", verifyToken, authController.checkAuth)
 
 /**
  * @swagger
+ * /auth/me:
+ *   delete:
+ *     summary: Delete current user account
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Account deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Terjadi kesalahan interupsi pada server backend"
+ */
+router.delete("/me", verifyToken, authController.deleteMyAccount)
+
+/**
+ * @swagger
  * /auth/refresh:
  *   post:
  *     summary: Refresh access token

@@ -73,38 +73,82 @@ export const runFoodStatusCheck = async () => {
       }
     }
 
+    const formatDateId = (dateVal) => {
+        if (!dateVal) return ''
+        const d = new Date(dateVal)
+        if (isNaN(d.getTime())) return String(dateVal)
+        const day = d.getDate()
+        const month = d.getMonth()
+        const year = d.getFullYear()
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+        return `${day} ${months[month]} ${year}`
+    }
+
+    const SIMPANIN_URL_FE = process.env.SIMPANIN_URL_FE
+
     for (const userId in userNotificationsMap) {
        const userBag = userNotificationsMap[userId]
        const { user, items } = userBag
        
-       let htmlContent = `
-         <div style="font-family: sans-serif; max-width: 600px; margin: auto;">
-           <h2>Halo 👋</h2>
-           <p>Berikut adalah ringkasan barang belanjaan Anda yang mendekati masa expired atau sudah expired:</p>
-           <ul>
-       `
-       
-       for (const item of items) {
-           const badge = item.type === 'expired' 
-               ? '<strong style="color:red">[Sudah Expired]</strong>' 
-               : `<strong style="color:orange">[H-${item.diffDays} Warning]</strong>`
-           
-           htmlContent += `
-             <li style="margin-bottom: 10px;">
-               <strong>${item.food.foodName}</strong><br/>
-               <small>Expired pada: ${item.food.expiryDate}</small> ${badge}
-             </li>
-           `
+       const groups = {
+           expiry_3: { diffDays: 3, title: "🚨 3 Hari Lagi! Bahan Makananmu Akan Segera Kadaluwarsa", label: "dalam 3 hari ke depan", items: [] },
+           expiry_2: { diffDays: 2, title: "🚨 2 Hari Lagi! Bahan Makananmu Akan Segera Kadaluwarsa", label: "dalam 2 hari ke depan", items: [] },
+           expiry_1: { diffDays: 1, title: "🚨 1 Hari Lagi! Bahan Makananmu Akan Segera Kadaluwarsa", label: "besok", items: [] },
+           expired:  { diffDays: 0, title: "☠️ Bahan Makananmu Telah Kadaluwarsa!", label: "telah melewati batas kadaluarsa hari ini", items: [] }
        }
 
-       htmlContent += `
-           </ul>
-           <p>Pastikan untuk menggunakan atau membuangnya untuk melacak statistik *Waste Tracker* Anda!</p>
-         </div>
-       `
-       
-       if (user && user.email) {
-           await sendEmail(user.email, 'Simpanin: Notifikasi Bahan Makanan', htmlContent)
+       for (const item of items) {
+           if (groups[item.type]) {
+               groups[item.type].items.push(item)
+           }
+       }
+
+       for (const key in groups) {
+           const group = groups[key]
+           if (group.items.length === 0) continue
+
+           let listHtml = ''
+           for (const item of group.items) {
+               listHtml += `<li style="margin-bottom: 5px">${item.food.foodName} (exp: ${formatDateId(item.food.expiryDate)})</li>\n`
+           }
+           
+           let desc = group.diffDays > 0 
+               ? `akan segera mendekati tanggal kadaluarsa ${group.label}.` 
+               : `telah melewati batas kadaluarsa hari ini.`
+
+           let htmlContent = `
+             <div style="font-family: sans-serif color: #333 line-height: 1.6 max-width: 600px margin: auto">
+               <h2 style="color: ${group.diffDays > 0 ? '#ff9800' : '#f44336'}">${group.title}</h2>
+               <p>Halo!</p>
+               <p>Kami ingin mengingatkan bahwa beberapa bahan makanan yang kamu simpan di Simpanin.id ${desc}</p>
+               
+               <p>🛒 <strong>Daftar bahan:</strong></p>
+               <ul>
+                 ${listHtml}
+               </ul>
+
+               <p>Yuk mulai rencanakan untuk menggunakannya agar tidak terbuang 🌱</p>
+               
+               <p>Cek bahanmu sekarang di <a href="${SIMPANIN_URL_FE}" style="color: #007bff text-decoration: none">Simpanin.id</a><br/>
+               Pastikan untuk menggunakan atau membuangnya untuk melacak statistik <em>Waste Tracker</em> Anda!</p>
+
+               <hr style="border: none border-top: 1px solid #eee margin: 25px 0">
+
+               <p>💡 <strong> Kamu butuh ide masakan dari bahan yang ada?</strong><br/>
+               Upgrade ke Premium hanya <strong>Rp19.000/bulan</strong> dan dapatkan:<br/>
+                Ide masakan berdasarkan bahan yang kamu punya lewat email!</p>
+
+               <p>Salam,<br/><strong>Tim Simpanin.id</strong><br/><em>Smarter Food Storage Starts Here.</em></p>
+             </div>
+           `
+           
+           if (user && user.email) {
+               try {
+                   await sendEmail(user.email, group.title, htmlContent)
+               } catch (err) {
+                   console.log(`ERROR EMAIL to ${user.email} (type: ${key}):`, err.response ? err.response.body : err)
+               }
+           }
        }
 
        for (const item of items) {
@@ -115,22 +159,26 @@ export const runFoodStatusCheck = async () => {
             message = `${item.food.foodName} telah melewati tanggal expired.`
          }
 
-         await Notification.create({
-            userId: user.id,       
-            foodId: item.food.id,
-            title,
-            message,
-            type: item.type,
-            isRead: false
-         })
+         try {
+             await Notification.create({
+                userId: user ? user.id : userId,       
+                foodId: item.food.id,
+                title,
+                message,
+                type: item.type,
+                isRead: false
+             })
+         } catch (err) {
+             console.log("ERROR NOTIFICATION CREATE:", err)
+         }
        }
     }
 
-    console.log(`CRON SELESAI: ${new Date().toISOString()} - Sent batched emails to ${Object.keys(userNotificationsMap).length} users.`)
+    console.log(`CRON SELESAI: ${new Date().toISOString()} - Processed notifications for ${Object.keys(userNotificationsMap).length} users.`)
 
   } catch (error) {
     console.log("ERROR CRON:", error)
   }
 }
 
-cron.schedule('0 0 * * *', runFoodStatusCheck)
+cron.schedule('* * * * *', runFoodStatusCheck)

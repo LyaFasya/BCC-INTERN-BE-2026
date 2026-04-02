@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs"
 import crypto from 'crypto'
 import sendEmail from '../services/email.service.js'
 import db from "../models/index.js"
+import { Op } from "sequelize"
+import { v2 as cloudinary } from "cloudinary"
 const userModel = db.user
 const access_secret = process.env.JWT_SECRET || "simpanin"
 const refresh_secret = process.env.JWT_REFRESH_SECRET || "simpanin_refresh"
@@ -48,10 +50,20 @@ const register = async (request, response) => {
       user.email,
       'Verifikasi Email Kamu',
       `
-        <h2>Halo 👋</h2>
-        <p>Terima kasih sudah register</p>
-        <p>Klik link ini untuk verifikasi akun kamu:</p>
-        <a href="${link}">${link}</a>
+        <div style="font-family: sans-serif; color: #333; line-height: 1.5;">
+          <p>Halo👋🏽,</p>
+          <p>Terima kasih telah melakukan registrasi.</p>
+          
+          <p>Untuk menyelesaikan proses pendaftaran, silakan verifikasi akun Anda dengan mengklik tautan di bawah ini:</p>
+          
+          <p><a href="${link}">${link}</a></p>
+          
+          <p>Jika Anda tidak merasa melakukan pendaftaran, Anda dapat mengabaikan email ini.</p>
+          
+          <p>Terima kasih.</p>
+          
+          <p>Salam,<br/>Tim Simpanin.id</p>
+        </div>
       `
     )
 
@@ -95,7 +107,7 @@ const login = async (request, response) => {
       return response.status(403).json({
         success: false,
         message: "Akun belum diverifikasi, silakan cek email kamu"
-      });
+      })
     }
 
     const payload = {
@@ -294,48 +306,87 @@ const updatePassword = async (request, response) => {
 
 const verifyEmail = async (request, response) => {
   try {
-    const { token } = request.params;
+    const { token } = request.params
     const user = await userModel.findOne({
       where: { verification_token: token }
-    });
+    })
 
     if (!user) {
       return response.status(400).send(`
         <html>
-          <body style="text-align:center;font-family:sans-serif;margin-top:50px;">
+          <body style="text-align:centerfont-family:sans-serifmargin-top:50px">
             <h2>❌ Token tidak valid</h2>
             <p>Link verifikasi tidak ditemukan atau sudah digunakan.</p>
           </body>
         </html>
-      `);
+      `)
     }
 
     await user.update({
       is_verified: true,
       verification_token: null
-    });
+    })
 
     return response.send(`
       <html>
         <head>
           <title>Verifikasi Berhasil</title>
         </head>
-        <body style="text-align:center;font-family:sans-serif;margin-top:50px;">
+        <body style="text-align:centerfont-family:sans-serifmargin-top:50px">
           <h2>✅ Email berhasil diverifikasi</h2>
         </body>
       </html>
-    `);
+    `)
 
   } catch (error) {
     return response.status(500).send(`
       <html>
-        <body style="text-align:center;font-family:sans-serif;margin-top:50px;">
+        <body style="text-align:centerfont-family:sans-serifmargin-top:50px">
           <h2>⚠️ Terjadi kesalahan</h2>
           <p>${error.message}</p>
         </body>
       </html>
-    `);
+    `)
   }
 }
 
-export default {register, login, refreshToken, logout, updatePassword, checkAuth, verifyEmail}
+const deleteMyAccount = async (request, response) => {
+  const transaction = await db.sequelize.transaction()
+  try {
+    const userId = request.user.id
+
+    const profile = await db.userProfile.findOne({ where: { userId }, transaction })
+    if (profile && profile.profilePublicId) {
+      await cloudinary.uploader.destroy(profile.profilePublicId)
+    }
+
+    const userFoods = await db.food.findAll({ where: { userId }, transaction })
+    const foodIds = userFoods.map(f => f.id)
+
+    if (foodIds.length > 0) {
+      await db.notification.destroy({ where: { foodId: { [Op.in]: foodIds } }, transaction })
+      await db.foodLog.destroy({ where: { foodId: { [Op.in]: foodIds } }, transaction })
+      await db.food.destroy({ where: { userId }, transaction })
+    }
+
+    await db.notification.destroy({ where: { userId }, transaction })
+    await db.userProfile.destroy({ where: { userId }, transaction })
+    await userModel.destroy({ where: { id: userId }, transaction })
+    await transaction.commit()
+    response.clearCookie("refreshToken")
+
+    return response.json({
+      success: true,
+      message: "Your account has been deleted"
+    })
+
+  } catch (error) {
+    await transaction.rollback()
+    return response.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export default {register, login, refreshToken, logout, updatePassword, checkAuth, verifyEmail, deleteMyAccount}
