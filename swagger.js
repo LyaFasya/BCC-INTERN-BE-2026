@@ -21,6 +21,10 @@ const options = {
         description: "Production Server"
       },
       {
+        url: process.env.SIMPANIN_URL_RAILWAY,
+        description: "Test Production Server"
+      },
+      {
         url: process.env.SIMPANIN_LOKAL,
         description: "Lokal Server"
       }
@@ -33,12 +37,6 @@ const options = {
           scheme: "bearer",
           bearerFormat: "JWT",
           description: "Masukkan **AccessToken** untuk autorisasi Endpoint terlindungi."
-        },
-        cookieAuth: {
-          type: "apiKey",
-          in: "cookie",
-          name: "refreshToken",
-          description: "Token pasif yang ada di browser Cookie (HTTP-only) untuk route Refresh."
         }
       },
       schemas: {
