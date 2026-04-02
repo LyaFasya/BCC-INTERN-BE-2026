@@ -5,55 +5,71 @@ const { food: foodModel, foodLog: foodLogModel, foodCategory: foodCategoryModel 
 export const getCategoryLossSummary = async (request, response) => {
   try {
     const userId = request.user.id
-    const [categories, expiredData, discardedData] = await Promise.all([
-      foodCategoryModel.findAll({
-        attributes: ["id", "category_name"],
-        raw: true
-      }),
+    
+    const [categories, expiredFoods, discardedLogs] = await Promise.all([
+      foodCategoryModel.findAll({ raw: true }),
       foodModel.findAll({
-        attributes: [
-          "id",
-          [Sequelize.literal("SUM(current_weight * price_of_unit)"), "totalPrice"]
-        ],
-        where: { userId, status: "expired" },
-        group: ["id"],
-        raw: true
+        where: { userId, status: "expired" }
       }),
       foodLogModel.findAll({
-        attributes: [
-          [Sequelize.col("food.id"), "id"],
-          [Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"), "totalPrice"]
-        ],
-        include: [{ model: foodModel, as: "food", attributes: [], where: { userId } }],
-        where: { status: "discarded" },
-        group: ["food.id"],
-        raw: true
+        include: [{ model: foodModel, as: "food", where: { userId } }],
+        where: { status: "discarded" }
       })
     ])
+
     const resultMap = {}
     categories.forEach(cat => {
-      resultMap[cat.id] = { category: cat.category_name, total_price: 0 }
+      resultMap[cat.id] = { 
+        category: cat.categoryName || cat.category_name, 
+        total_price: 0, 
+        total_amount: 0,
+        unit_of_weight: null
+      }
     })
 
-    const addPrice = (dataArr) => {
-      dataArr.forEach(item => {
-        if (resultMap[item.id]) {
-          resultMap[item.id].total_price += Number(item.totalPrice || 0)
-        }
-      })
-    }
+    expiredFoods.forEach(item => {
+      const catId = item.foodCategoryId || item.food_category_id
+      if (!catId || !resultMap[catId]) return
+      
+      const currentWeight = Number(item.currentWeight) || 0
+      const pricePerUnit = Number(item.priceOfUnit) || 0
+      resultMap[catId].total_price += currentWeight * pricePerUnit
+      resultMap[catId].total_amount += currentWeight
+      
+      if (!resultMap[catId].unit_of_weight) {
+        resultMap[catId].unit_of_weight = item.unitOfWeight || item.unit_of_weight
+      }
+    })
 
-    addPrice(expiredData)
-    addPrice(discardedData)
+    discardedLogs.forEach(log => {
+      const food = log.food
+      if (!food) return
+      const catId = food.foodCategoryId || food.food_category_id
+      if (!catId || !resultMap[catId]) return
+
+      const amount = Number(log.amount) || 0
+      const pricePerUnit = Number(food.priceOfUnit) || 0
+      resultMap[catId].total_price += amount * pricePerUnit
+      resultMap[catId].total_amount += amount
+
+      if (!resultMap[catId].unit_of_weight) {
+        resultMap[catId].unit_of_weight = food.unitOfWeight || food.unit_of_weight
+      }
+    })
 
     const resultArray = Object.values(resultMap)
-    const totalAllPrice = resultArray.reduce((sum, item) => sum + item.total_price, 0)
+    let totalAllPrice = 0
+    resultArray.forEach(cat => {
+      totalAllPrice += cat.total_price
+    })
 
     const finalResult = resultArray.map(item => {
       const percentage = totalAllPrice > 0 ? (item.total_price / totalAllPrice) * 100 : 0
       return {
         category: item.category,
-        total_price: item.total_price,
+        total_amount: Number(item.total_amount.toFixed(2)),
+        unit_of_weight: item.unit_of_weight || "-",
+        total_price: Number(item.total_price.toFixed(2)),
         percentage: Number(percentage.toFixed(2))
       }
     }).sort((a, b) => b.total_price - a.total_price)
@@ -74,83 +90,87 @@ export const getCategoryLossSummary = async (request, response) => {
 export const getCategoryLossPerMonth = async (request, response) => {
   try {
     const userId = request.user.id
-    const [categories, expiredData, discardedData] = await Promise.all([
-      foodCategoryModel.findAll({
-        attributes: ["id", "category_name"],
-        raw: true
-      }),
+    
+    const [categories, expiredFoods, discardedLogs] = await Promise.all([
+      foodCategoryModel.findAll({ raw: true }),
       foodModel.findAll({
-        attributes: [
-          [Sequelize.literal("DATE_FORMAT(purchase_date, '%Y-%m')"), "month"],
-          "id",
-          [Sequelize.literal("SUM(current_weight * price_of_unit)"), "totalPrice"]
-        ],
-        where: { userId, status: "expired" },
-        group: [Sequelize.literal("DATE_FORMAT(purchase_date, '%Y-%m')"), "id"],
-        raw: true
+        where: { userId, status: "expired" }
       }),
       foodLogModel.findAll({
-        attributes: [
-          [Sequelize.literal("DATE_FORMAT(foodLog.created_at, '%Y-%m')"), "month"],
-          [Sequelize.col("food.id"), "id"],
-          [Sequelize.literal("SUM(foodLog.amount * food.price_of_unit)"), "totalPrice"]
-        ],
-        include: [{ model: foodModel, as: "food", attributes: [], where: { userId } }],
-        where: { status: "discarded" },
-        group: [Sequelize.literal("DATE_FORMAT(foodLog.created_at, '%Y-%m')"), "food.id"],
-        raw: true
+        include: [{ model: foodModel, as: "food", where: { userId } }],
+        where: { status: "discarded" }
       })
     ])
 
     const categoryDict = {}
-    categories.forEach(cat => { categoryDict[cat.id] = cat.category_name })
+    categories.forEach(cat => { categoryDict[cat.id] = cat.categoryName || cat.category_name })
     
-    const resultMap = {}
-    const addToMap = (dataArr) => {
-      dataArr.forEach(item => {
-        const key = `${item.month}-${item.id}`
-        if (!resultMap[key]) {
-          resultMap[key] = {
-            month: item.month,
-            id: item.id,
-            category: categoryDict[item.id] || "Unknown",
-            total_price: 0
-          }
-        }
-        resultMap[key].total_price += Number(item.totalPrice || 0)
-      })
+    const monthMap = {}
+
+    const addRecord = (month, catId, price, amount, unit) => {
+      if (!catId || !categoryDict[catId]) return
+      if (!monthMap[month]) {
+        monthMap[month] = {}
+        categories.forEach(cat => {
+          monthMap[month][cat.id] = { total_price: 0, total_amount: 0, unit_of_weight: null }
+        })
+      }
+      monthMap[month][catId].total_price += price
+      monthMap[month][catId].total_amount += amount
+      if (!monthMap[month][catId].unit_of_weight) {
+        monthMap[month][catId].unit_of_weight = unit
+      }
     }
 
-    addToMap(expiredData)
-    addToMap(discardedData)
-
-    const groupedByMonth = {}
-    Object.values(resultMap).forEach(item => {
-      if (!groupedByMonth[item.month]) {
-        groupedByMonth[item.month] = []
-      }
-      groupedByMonth[item.month].push(item)
+    expiredFoods.forEach(item => {
+      const timestamp = item.purchaseDate || item.purchase_date || new Date()
+      const dateObj = new Date(timestamp)
+      // Pastikan valid dates
+      const month = !isNaN(dateObj) ? dateObj.toISOString().slice(0, 7) : new Date().toISOString().slice(0, 7)
+      
+      const currentWeight = Number(item.currentWeight) || 0
+      const pricePerUnit = Number(item.priceOfUnit) || 0
+      const price = currentWeight * pricePerUnit
+      const catId = item.foodCategoryId || item.food_category_id
+      
+      addRecord(month, catId, price, currentWeight, item.unitOfWeight || item.unit_of_weight)
     })
 
-    const finalResult = Object.keys(groupedByMonth).map(month => {
-      const items = groupedByMonth[month]
-      const totalMonth = items.reduce((sum, item) => sum + item.total_price, 0)
+    discardedLogs.forEach(log => {
+      const food = log.food
+      if (!food) return
+      
+      const timestamp = log.createdAt || log.created_at || new Date()
+      const dateObj = new Date(timestamp)
+      const month = !isNaN(dateObj) ? dateObj.toISOString().slice(0, 7) : new Date().toISOString().slice(0, 7)
+      
+      const amount = Number(log.amount) || 0
+      const pricePerUnit = Number(food.priceOfUnit) || 0
+      const price = amount * pricePerUnit
+      const catId = food.foodCategoryId || food.food_category_id
 
-      const categoryMap = {}
-      items.forEach(item => { categoryMap[item.id] = item.total_price })
+      addRecord(month, catId, price, amount, food.unitOfWeight || food.unit_of_weight)
+    })
 
+    const finalResult = Object.keys(monthMap).sort().map(month => {
+      const catObj = monthMap[month]
+      let totalMonthPrice = 0
+      Object.values(catObj).forEach(cat => { totalMonthPrice += cat.total_price })
+      
       const categoriesWithZero = categories.map(cat => {
-        const total_price = categoryMap[cat.id] || 0
-        const percentage = totalMonth > 0 ? (total_price / totalMonth) * 100 : 0
+        const data = catObj[cat.id]
+        const percentage = totalMonthPrice > 0 ? (data.total_price / totalMonthPrice) * 100 : 0
         return {
-          category: cat.category_name,
-          total_price,
+          category: categoryDict[cat.id],
+          total_amount: Number(data.total_amount.toFixed(2)),
+          unit_of_weight: data.unit_of_weight || "-",
+          total_price: Number(data.total_price.toFixed(2)),
           percentage: Number(percentage.toFixed(2))
         }
       }).sort((a, b) => b.total_price - a.total_price)
-      
+
       return { month, categories: categoriesWithZero }
-    }).sort((a, b) => a.month.localeCompare(b.month))
+    })
     
     return response.status(200).json({
       success: true,
