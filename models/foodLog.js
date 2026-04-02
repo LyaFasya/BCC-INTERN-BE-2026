@@ -21,10 +21,6 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         field: "food_id"
       },
-      userId: {
-        type: DataTypes.INTEGER,
-        field: "user_id"
-      },
       amount: {
         type: DataTypes.FLOAT
       },
