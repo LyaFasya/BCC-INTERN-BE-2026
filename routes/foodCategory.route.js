@@ -20,44 +20,49 @@ router.use(authenticate)
  * @swagger
  * components:
  *   schemas:
+ *     CategoryData:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         categoryName:
+ *           type: string
+ *           example: "Daging"
+ *         categoryProfile:
+ *           type: string
+ *           nullable: true
+ *           example: "https://res.cloudinary.com/example/image.jpg"
+ *         categoryPublicId:
+ *           type: string
+ *           nullable: true
+ *           example: "categories/abc123"
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
  *     CategoryResponse:
  *       type: object
  *       properties:
  *         success:
  *           type: boolean
+ *           example: true
  *         message:
  *           type: string
  *         data:
- *           type: object
- *           properties:
- *             id:
- *               type: integer
- *               example: 1
- *             categoryName:
- *               type: string
- *               example: "Daging"
- *             categoryProfile:
- *               type: string
- *               example: "https://example.com/image.jpg"
+ *           $ref: '#/components/schemas/CategoryData'
  *     CategoryListResponse:
  *       type: object
  *       properties:
  *         success:
  *           type: boolean
+ *           example: true
  *         data:
  *           type: array
  *           items:
- *             type: object
- *             properties:
- *               id:
- *                 type: integer
- *                 example: 1
- *               categoryName:
- *                 type: string
- *                 example: "Daging"
- *               categoryProfile:
- *                 type: string
- *                 example: "https://example.com/image.jpg"
+ *             $ref: '#/components/schemas/CategoryData'
  */
 
 /**
@@ -75,15 +80,24 @@ router.use(authenticate)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CategoryListResponse'
+ *             example:
+ *               success: true
+ *               data:
+ *                 - id: 1
+ *                   categoryName: "Daging"
+ *                   categoryProfile: "https://res.cloudinary.com/example/image.jpg"
+ *                   categoryPublicId: "categories/abc123"
+ *                   createdAt: "2024-01-01T00:00:00.000Z"
+ *                   updatedAt: "2024-01-01T00:00:00.000Z"
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - token tidak ada atau tidak valid
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *               message: "No token provided"
  *       500:
  *         description: Server Error
  *         content:
@@ -92,7 +106,7 @@ router.use(authenticate)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *               message: "Internal server error"
  */
 router.get("/", category.getAllCategory)
 
@@ -119,56 +133,78 @@ router.get("/", category.getAllCategory)
  *               category_profile:
  *                 type: string
  *                 format: binary
+ *                 description: Gambar kategori (opsional)
  *     responses:
  *       201:
- *         description: Category created successfully
+ *         description: Category berhasil dibuat
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CategoryResponse'
+ *             example:
+ *               success: true
+ *               message: "Category created"
+ *               data:
+ *                 id: 1
+ *                 categoryName: "Daging"
+ *                 categoryProfile: "https://res.cloudinary.com/example/image.jpg"
+ *                 categoryPublicId: "categories/abc123"
+ *                 createdAt: "2024-01-01T00:00:00.000Z"
+ *                 updatedAt: "2024-01-01T00:00:00.000Z"
  *       400:
- *         description: Bad Request
+ *         description: Validasi gagal
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *             examples:
+ *               missingName:
+ *                 summary: category_name tidak dikirim
+ *                 value:
+ *                   success: false
+ *                   message: "Category name is required"
+ *               alreadyExists:
+ *                 summary: Nama kategori sudah ada
+ *                 value:
+ *                   success: false
+ *                   message: "Category already exists"
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - token tidak ada atau tidak valid
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *               message: "No token provided"
  *       403:
- *         description: Forbidden
+ *         description: Forbidden - bukan admin
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Dilarang: Akses eksklusif, Role tidak diizinkan"
+ *               message: "Access denied"
  *       500:
  *         description: Server Error
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *             examples:
+ *               uploadFailed:
+ *                 summary: Upload gambar gagal
+ *                 value:
+ *                   success: false
+ *                   message: "Image upload failed"
+ *               serverError:
+ *                 summary: Error server umum
+ *                 value:
+ *                   success: false
+ *                   message: "Internal server error"
  */
-router.post(
-  "/",
-  checkRole("admin"),
-  upload.single("category_profile"),
-  category.createCategory
-)
+router.post("/", checkRole("admin"), upload.single("category_profile"), category.createCategory)
 
 /**
  * @swagger
@@ -194,52 +230,64 @@ router.post(
  *               category_name:
  *                 type: string
  *                 example: Sayur
+ *                 description: Nama baru kategori (opsional)
  *               category_profile:
  *                 type: string
  *                 format: binary
+ *                 description: Gambar baru kategori (opsional, akan replace gambar lama)
  *     responses:
  *       200:
- *         description: Category updated successfully
+ *         description: Category berhasil diupdate
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/CategoryResponse'
+ *             example:
+ *               success: true
+ *               message: "Category updated"
+ *               data:
+ *                 id: 1
+ *                 categoryName: "Sayur"
+ *                 categoryProfile: "https://res.cloudinary.com/example/image.jpg"
+ *                 categoryPublicId: "categories/xyz456"
+ *                 createdAt: "2024-01-01T00:00:00.000Z"
+ *                 updatedAt: "2024-01-02T00:00:00.000Z"
  *       400:
- *         description: Bad Request
+ *         description: Nama kategori sudah dipakai category lain
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *               message: "Category already exists"
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - token tidak ada atau tidak valid
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *               message: "No token provided"
  *       403:
- *         description: Forbidden
+ *         description: Forbidden - bukan admin
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Dilarang: Akses eksklusif, Role tidak diizinkan"
+ *               message: "Access denied"
  *       404:
- *         description: Not Found
+ *         description: Category tidak ditemukan
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Data referensi tidak ditemukan di sistem"
+ *               message: "Category not found"
  *       500:
  *         description: Server Error
  *         content:
@@ -248,14 +296,9 @@ router.post(
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *               message: "Internal server error"
  */
-router.put(
-  "/:id",
-  checkRole("admin"),
-  upload.single("category_profile"),
-  category.updateCategory
-)
+router.put("/:id", checkRole("admin"), upload.single("category_profile"), category.updateCategory)
 
 /**
  * @swagger
@@ -274,34 +317,48 @@ router.put(
  *         description: Category ID
  *     responses:
  *       200:
- *         description: Category deleted
+ *         description: Category berhasil dihapus (beserta gambar di Cloudinary jika ada)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Category deleted"
+ *             example:
+ *               success: true
+ *               message: "Category deleted"
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - token tidak ada atau tidak valid
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *               message: "No token provided"
  *       403:
- *         description: Forbidden
+ *         description: Forbidden - bukan admin
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Dilarang: Akses eksklusif, Role tidak diizinkan"
+ *               message: "Access denied"
  *       404:
- *         description: Not Found
+ *         description: Category tidak ditemukan
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Data referensi tidak ditemukan di sistem"
+ *               message: "Category not found"
  *       500:
  *         description: Server Error
  *         content:
@@ -310,7 +367,7 @@ router.put(
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *               message: "Internal server error"
  */
 router.delete("/:id", checkRole("admin"), category.deleteCategory)
 

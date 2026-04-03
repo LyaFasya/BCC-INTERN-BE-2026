@@ -15,15 +15,36 @@ import authController from "../controllers/auth.controller.js"
  * @swagger
  * components:
  *   schemas:
- *     AuthResponse:
+ *     RegisterResponse:
  *       type: object
  *       properties:
  *         success:
  *           type: boolean
+ *           example: true
  *         message:
  *           type: string
+ *           example: "Register Success, please check your email for verification"
+ *         data:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *               example: 1
+ *             email:
+ *               type: string
+ *               example: "user@mail.com"
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         message:
+ *           type: string
+ *           example: "Login success"
  *         accessToken:
  *           type: string
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *         data:
  *           type: object
  *           properties:
@@ -36,23 +57,34 @@ import authController from "../controllers/auth.controller.js"
  *             role:
  *               type: string
  *               example: "user"
- *             is_verified:
- *               type: boolean
- *               example: true
+ *     CheckAuthResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         message:
+ *           type: string
+ *           example: "User is logged in"
+ *         data:
+ *           type: object
+ *           description: Full user object (excluding password)
  *     RefreshResponse:
  *       type: object
  *       properties:
  *         success:
  *           type: boolean
+ *           example: true
  *         accessToken:
  *           type: string
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  */
 
 /**
  * @swagger
  * /auth/register:
  *   post:
- *     summary: Register user
+ *     summary: Register user baru
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -68,26 +100,45 @@ import authController from "../controllers/auth.controller.js"
  *               password:
  *                 type: string
  *                 example: User123456
- *                 description: Minimal 6 karakter, format terdapat minimal 1 huruf besar
+ *                 description: Minimal 6 karakter dan mengandung minimal 1 huruf kapital
  *               confirm_password:
  *                 type: string
  *                 example: User123456
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: Register berhasil, email verifikasi dikirim
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
+ *               $ref: '#/components/schemas/RegisterResponse'
+ *             example:
+ *               success: true
+ *               message: "Register Success, please check your email for verification"
+ *               data:
+ *                 id: 1
+ *                 email: "user@mail.com"
  *       400:
- *         description: Bad Request
+ *         description: Validasi gagal
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Email already registered"
+ *             examples:
+ *               passwordMismatch:
+ *                 summary: Password tidak cocok
+ *                 value:
+ *                   success: false
+ *                   message: "Password and confirm password do not match"
+ *               passwordWeak:
+ *                 summary: Password tidak memenuhi syarat
+ *                 value:
+ *                   success: false
+ *                   message: "Password must be at least 6 characters and contain at least 1 uppercase letter"
+ *               emailTaken:
+ *                 summary: Email sudah terdaftar
+ *                 value:
+ *                   success: false
+ *                   message: "Email already registered"
  *       500:
  *         description: Server Error
  *         content:
@@ -96,7 +147,7 @@ import authController from "../controllers/auth.controller.js"
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *               message: "Internal server error"
  */
 router.post("/register", authController.register)
 
@@ -119,30 +170,29 @@ router.post("/register", authController.register)
  *                 example: user@mail.com
  *               password:
  *                 type: string
- *                 example: 123456
+ *                 example: User123456
  *     responses:
  *       200:
- *         description: Login success
+ *         description: Login berhasil, cookie token dan refreshToken di-set
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
+ *               $ref: '#/components/schemas/LoginResponse'
+ *             example:
+ *               success: true
+ *               message: "Login success"
+ *               accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *               data:
+ *                 id: 1
+ *                 email: "user@mail.com"
+ *                 role: "user"
  *         headers:
  *           Set-Cookie:
- *             description: Mengatur cookie HTTPOnly untuk token dan refreshToken
+ *             description: Mengatur cookie HTTPOnly untuk token (15m) dan refreshToken (7d)
  *             schema:
  *               type: string
- *       400:
- *         description: Bad Request
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Email not found atau Invalid password"
  *       401:
- *         description: Unauthorized
+ *         description: Password salah
  *         content:
  *           application/json:
  *             schema:
@@ -150,15 +200,24 @@ router.post("/register", authController.register)
  *             example:
  *               success: false
  *               message: "Invalid password"
- *       404:
- *         description: Not Found
+ *       403:
+ *         description: Akun belum diverifikasi
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Data referensi tidak ditemukan di sistem"
+ *               message: "Akun belum diverifikasi, silakan cek email kamu"
+ *       404:
+ *         description: Email tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "Email not found"
  *       500:
  *         description: Server Error
  *         content:
@@ -167,7 +226,7 @@ router.post("/register", authController.register)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *               message: "Internal server error"
  */
 router.post("/login", authController.login)
 
@@ -175,19 +234,27 @@ router.post("/login", authController.login)
  * @swagger
  * /auth/me:
  *   get:
- *     summary: Get current user
+ *     summary: Get current logged-in user
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Current user data
+ *         description: Data user yang sedang login (tanpa field password)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
+ *               $ref: '#/components/schemas/CheckAuthResponse'
+ *             example:
+ *               success: true
+ *               message: "User is logged in"
+ *               data:
+ *                 id: 1
+ *                 email: "user@mail.com"
+ *                 role: "user"
+ *                 is_verified: true
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - token tidak ada atau tidak valid
  *         content:
  *           application/json:
  *             schema:
@@ -196,7 +263,7 @@ router.post("/login", authController.login)
  *               success: false
  *               message: "No token provided"
  *       404:
- *         description: Not Found
+ *         description: User tidak ditemukan
  *         content:
  *           application/json:
  *             schema:
@@ -212,7 +279,7 @@ router.post("/login", authController.login)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *               message: "Internal server error"
  */
 router.get("/me", verifyToken, authController.checkAuth)
 
@@ -220,102 +287,13 @@ router.get("/me", verifyToken, authController.checkAuth)
  * @swagger
  * /auth/me:
  *   delete:
- *     summary: Delete current user account
+ *     summary: Hapus akun user yang sedang login
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Account deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
- *       500:
- *         description: Server Error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
- */
-router.delete("/me", verifyToken, authController.deleteMyAccount)
-
-/**
- * @swagger
- * /auth/refresh:
- *   post:
- *     summary: Refresh access token
- *     tags: [Auth]
- *     parameters:
- *       - in: cookie
- *         name: refreshToken
- *         schema:
- *           type: string
- *         required: true
- *         description: Nilai RefreshToken dari HttpOnly Cookie di browser
- *     responses:
- *       200:
- *         description: New token generated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/RefreshResponse'
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "No refresh token"
- *       403:
- *         description: Forbidden
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Invalid token"
- *       500:
- *         description: Server Error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
- */
-router.post("/refresh", authController.refreshToken)
-
-/**
- * @swagger
- * /auth/logout:
- *   post:
- *     summary: Logout user
- *     tags: [Auth]
- *     responses:
- *       200:
- *         description: Logout success
+ *         description: Akun berhasil dihapus beserta semua data terkait
  *         content:
  *           application/json:
  *             schema:
@@ -326,7 +304,19 @@ router.post("/refresh", authController.refreshToken)
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Logout berhasil"
+ *                   example: "Your account has been deleted"
+ *             example:
+ *               success: true
+ *               message: "Your account has been deleted"
+ *       401:
+ *         description: Unauthorized - token tidak ada atau tidak valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "No token provided"
  *       500:
  *         description: Server Error
  *         content:
@@ -335,7 +325,87 @@ router.post("/refresh", authController.refreshToken)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *               message: "Internal server error"
+ */
+router.delete("/me", verifyToken, authController.deleteMyAccount)
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresh access token menggunakan refreshToken cookie
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: cookie
+ *         name: refreshToken
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: RefreshToken dari HttpOnly Cookie di browser
+ *     responses:
+ *       200:
+ *         description: Access token baru berhasil digenerate
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RefreshResponse'
+ *             example:
+ *               success: true
+ *               accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       401:
+ *         description: Tidak ada refresh token di cookie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             example:
+ *               success: false
+ *               message: "No refresh token"
+ *       403:
+ *         description: Token tidak valid, tidak cocok, atau sudah expired
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseErrorResponse'
+ *             examples:
+ *               invalidToken:
+ *                 summary: Token tidak cocok di database
+ *                 value:
+ *                   success: false
+ *                   message: "Invalid token"
+ *               expiredToken:
+ *                 summary: Token sudah expired
+ *                 value:
+ *                   success: false
+ *                   message: "Token expired or invalid"
+ */
+router.post("/refresh", authController.refreshToken)
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Logout user dan hapus refreshToken cookie
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logout berhasil
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Logout success"
+ *             example:
+ *               success: true
+ *               message: "Logout success"
+ *       204:
+ *         description: Tidak ada refreshToken cookie (sudah logout atau belum login) - no body
  */
 router.post("/logout", authController.logout)
 
@@ -343,7 +413,7 @@ router.post("/logout", authController.logout)
  * @swagger
  * /auth/update-password:
  *   put:
- *     summary: Update user password
+ *     summary: Update password user
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -367,7 +437,7 @@ router.post("/logout", authController.logout)
  *                 example: User654321
  *     responses:
  *       200:
- *         description: Password updated successfully
+ *         description: Password berhasil diupdate
  *         content:
  *           application/json:
  *             schema:
@@ -378,27 +448,53 @@ router.post("/logout", authController.logout)
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Password berhasil diperbarui"
+ *                   example: "Password updated successfully"
+ *             example:
+ *               success: true
+ *               message: "Password updated successfully"
  *       400:
- *         description: Bad Request
+ *         description: Validasi gagal
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
- *             example:
- *               success: false
- *               message: "Password confirmation does not match"
+ *             examples:
+ *               missingFields:
+ *                 summary: Ada field yang kosong
+ *                 value:
+ *                   success: false
+ *                   message: "All fields are required"
+ *               confirmMismatch:
+ *                 summary: Konfirmasi password tidak cocok
+ *                 value:
+ *                   success: false
+ *                   message: "Password confirmation does not match"
+ *               passwordTooShort:
+ *                 summary: Password baru terlalu pendek
+ *                 value:
+ *                   success: false
+ *                   message: "Password must be at least 6 characters"
+ *               wrongOldPassword:
+ *                 summary: Password lama salah
+ *                 value:
+ *                   success: false
+ *                   message: "Wrong old password"
+ *               samePassword:
+ *                 summary: Password baru sama dengan yang lama
+ *                 value:
+ *                   success: false
+ *                   message: "New password must be different"
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - token tidak ada atau tidak valid
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Wrong old password"
+ *               message: "No token provided"
  *       404:
- *         description: Not Found
+ *         description: User tidak ditemukan
  *         content:
  *           application/json:
  *             schema:
@@ -414,7 +510,7 @@ router.post("/logout", authController.logout)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Terjadi kesalahan interupsi pada server backend"
+ *               message: "Internal server error"
  */
 router.put("/update-password", verifyToken, authController.updatePassword)
 

@@ -5,7 +5,6 @@ const { food: foodModel, foodLog: foodLogModel, foodCategory: foodCategoryModel 
 export const getCategoryLossSummary = async (request, response) => {
   try {
     const userId = request.user.id
-    
     const [categories, expiredFoods, discardedLogs] = await Promise.all([
       foodCategoryModel.findAll({ raw: true }),
       foodModel.findAll({
@@ -90,7 +89,6 @@ export const getCategoryLossSummary = async (request, response) => {
 export const getCategoryLossPerMonth = async (request, response) => {
   try {
     const userId = request.user.id
-    
     const [categories, expiredFoods, discardedLogs] = await Promise.all([
       foodCategoryModel.findAll({ raw: true }),
       foodModel.findAll({
@@ -125,7 +123,6 @@ export const getCategoryLossPerMonth = async (request, response) => {
     expiredFoods.forEach(item => {
       const timestamp = item.purchaseDate || item.purchase_date || new Date()
       const dateObj = new Date(timestamp)
-      // Pastikan valid dates
       const month = !isNaN(dateObj) ? dateObj.toISOString().slice(0, 7) : new Date().toISOString().slice(0, 7)
       
       const currentWeight = Number(item.currentWeight) || 0
