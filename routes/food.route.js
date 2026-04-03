@@ -284,7 +284,7 @@ router.get("/", foodController.getAllFood)
  *       - bearerAuth: []
  *     responses:
  *       200:
- *                 description: Risk ranking data
+ *         description: Risk ranking data
  *         content:
  *           application/json:
  *             schema:
