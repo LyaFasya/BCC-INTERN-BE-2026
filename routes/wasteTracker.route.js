@@ -22,6 +22,10 @@ router.use(auth)
  *       properties:
  *         category:
  *           type: string
+ *         total_amount:
+ *           type: number
+ *         unit_of_weight:
+ *           type: string
  *         total_price:
  *           type: number
  *         percentage:
@@ -80,6 +84,8 @@ router.use(auth)
  *       type: object
  *       properties:
  *         name:
+ *           type: string
+ *         category:
  *           type: string
  *         discarded_date:
  *           type: string

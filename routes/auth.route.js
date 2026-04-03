@@ -87,7 +87,7 @@ import authController from "../controllers/auth.controller.js"
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *               message: "Email already registered"
  *       500:
  *         description: Server Error
  *         content:
@@ -140,7 +140,7 @@ router.post("/register", authController.register)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *               message: "Email not found atau Invalid password"
  *       401:
  *         description: Unauthorized
  *         content:
@@ -149,7 +149,7 @@ router.post("/register", authController.register)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *               message: "Invalid password"
  *       404:
  *         description: Not Found
  *         content:
@@ -194,7 +194,7 @@ router.post("/login", authController.login)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *               message: "No token provided"
  *       404:
  *         description: Not Found
  *         content:
@@ -203,7 +203,7 @@ router.post("/login", authController.login)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Data referensi tidak ditemukan di sistem"
+ *               message: "User not found"
  *       500:
  *         description: Server Error
  *         content:
@@ -285,7 +285,7 @@ router.delete("/me", verifyToken, authController.deleteMyAccount)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *               message: "No refresh token"
  *       403:
  *         description: Forbidden
  *         content:
@@ -294,7 +294,7 @@ router.delete("/me", verifyToken, authController.deleteMyAccount)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Dilarang: Akses eksklusif, Role tidak diizinkan"
+ *               message: "Invalid token"
  *       500:
  *         description: Server Error
  *         content:
@@ -387,7 +387,7 @@ router.post("/logout", authController.logout)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Validasi input gagal atau parameter tidak lengkap"
+ *               message: "Password confirmation does not match"
  *       401:
  *         description: Unauthorized
  *         content:
@@ -396,7 +396,7 @@ router.post("/logout", authController.logout)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Akses ditolak: Token tidak valid atau kadaluarsa"
+ *               message: "Wrong old password"
  *       404:
  *         description: Not Found
  *         content:
@@ -405,7 +405,7 @@ router.post("/logout", authController.logout)
  *               $ref: '#/components/schemas/BaseErrorResponse'
  *             example:
  *               success: false
- *               message: "Data referensi tidak ditemukan di sistem"
+ *               message: "User not found"
  *       500:
  *         description: Server Error
  *         content:

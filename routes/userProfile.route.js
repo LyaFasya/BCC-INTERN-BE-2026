@@ -25,15 +25,17 @@ import upload from "../middlewares/upload.js"
  *           type: integer
  *         name:
  *           type: string
- *         phone_number:
+ *         phoneNumber:
  *           type: string
  *         address:
  *           type: string
  *         gender:
  *           type: string
- *         profile_picture:
+ *         profilePicture:
  *           type: string
  *           description: Image URL
+ *         userId:
+ *           type: integer
  *     ProfileResponse:
  *       type: object
  *       properties:

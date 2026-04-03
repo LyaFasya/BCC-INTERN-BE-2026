@@ -29,34 +29,30 @@ router.use(auth)
  *           properties:
  *             id:
  *               type: integer
- *               example: 1
- *             food_name:
+ *             foodName:
  *               type: string
- *               example: "Daging Ayam"
- *             food_category_id:
+ *             foodCategoryId:
  *               type: integer
- *               example: 2
- *             initial_weight:
+ *             initialWeight:
  *               type: number
- *               example: 2
- *             current_weight:
+ *             currentWeight:
  *               type: number
- *               example: 1.5
- *             unit_of_weight:
+ *             unitOfWeight:
  *               type: string
- *               example: "kg"
- *             storage_location:
+ *             storageLocation:
  *               type: string
- *               example: "Kulkas Bawah"
- *             purchase_date:
+ *             purchaseDate:
  *               type: string
- *               example: "2026-03-25"
- *             expiry_date:
+ *               format: date-time
+ *             expiryDate:
  *               type: string
- *               example: "2026-04-05"
+ *               format: date-time
  *             status:
  *               type: string
- *               example: "fresh"
+ *             price:
+ *               type: number
+ *             priceOfUnit:
+ *               type: number
  *     FoodListResponse:
  *       type: object
  *       properties:
@@ -71,19 +67,100 @@ router.use(auth)
  *             properties:
  *               id:
  *                 type: integer
- *                 example: 1
- *               food_name:
+ *               food_category_id:
+ *                 type: integer
+ *               name:
  *                 type: string
- *                 example: "Daging Ayam"
  *               current_weight:
  *                 type: number
- *                 example: 1.5
+ *               unit_weight:
+ *                 type: string
+ *               purchase_date:
+ *                 type: string
+ *                 format: date-time
+ *               expiry_date:
+ *                 type: string
+ *                 format: date-time
+ *               days_left:
+ *                 type: integer
+ *               total_price:
+ *                 type: number
+ *               storage_location:
+ *                 type: string
+ *               risk_score:
+ *                 type: number
+ *     RiskRankingListResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
+ *         data:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               food_name:
+ *                 type: string
+ *               current_weight:
+ *                 type: number
  *               unit_of_weight:
  *                 type: string
- *                 example: "kg"
- *               status:
- *                 type: string
- *                 example: "fresh"
+ *               price_of_unit:
+ *                 type: number
+ *               days_left:
+ *                 type: integer
+ *               risk_score:
+ *                 type: number
+ *     FoodUsageResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *           properties:
+ *             food_id:
+ *               type: integer
+ *             name:
+ *               type: string
+ *             used_weight:
+ *               type: number
+ *             remaining_weight:
+ *               type: number
+ *             status:
+ *               type: string
+ *     FoodDiscardResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *           properties:
+ *             food_id:
+ *               type: integer
+ *             name:
+ *               type: string
+ *             discarded_weight:
+ *               type: number
+ *             remaining_weight:
+ *               type: number
+ *             status:
+ *               type: string
+ *     BaseSuccessResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         message:
+ *           type: string
  */
 
 /**
@@ -207,11 +284,11 @@ router.get("/", foodController.getAllFood)
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Risk ranking data
+ *                 description: Risk ranking data
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodListResponse'
+ *               $ref: '#/components/schemas/RiskRankingListResponse'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -315,7 +392,7 @@ router.get("/:id", foodController.getDetailFood)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodResponse'
+ *               $ref: '#/components/schemas/FoodUsageResponse'
  *       400:
  *         description: Bad request (e.g. usage exceeds available weight)
  *         content:
@@ -383,7 +460,7 @@ router.patch("/:id/use", foodController.updateFoodUsage)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodResponse'
+ *               $ref: '#/components/schemas/FoodDiscardResponse'
  *       400:
  *         description: Bad request (e.g. discard exceeds available weight)
  *         content:
@@ -440,7 +517,7 @@ router.patch("/:id/discard", foodController.discardFood)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodResponse'
+ *               $ref: '#/components/schemas/BaseSuccessResponse'
  *       401:
  *         description: Unauthorized
  *         content:

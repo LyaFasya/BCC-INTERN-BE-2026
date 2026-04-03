@@ -31,7 +31,7 @@ const createProfile = async (request, response) => {
         success: false,
         message: "Phone number must be numeric",
       })
-    } 
+    }
 
     const dataProfile = {
       userId,
@@ -82,7 +82,7 @@ const updateProfile = async (request, response) => {
     }
 
     const updateData = {}
-    if (request.body.name) { updateData.name = request.body.name.trim()}
+    if (request.body.name) { updateData.name = request.body.name.trim() }
     if (request.body.phone_number) {
       if (!/^[0-9]+$/.test(request.body.phone_number)) {
         return response.status(400).json({
@@ -92,9 +92,9 @@ const updateProfile = async (request, response) => {
       }
       updateData.phoneNumber = request.body.phone_number.trim()
     }
-    if (request.body.address) {updateData.address = request.body.address}
-    if (request.body.gender) {updateData.gender = request.body.gender}
-    
+    if (request.body.address) { updateData.address = request.body.address }
+    if (request.body.gender) { updateData.gender = request.body.gender }
+
     if (request.file) {
       if (profile.profilePublicId) {
         await cloudinary.uploader.destroy(profile.profilePublicId)
@@ -195,4 +195,4 @@ const getProfileByKeyword = async (request, response) => {
   }
 }
 
-export default {createProfile, updateProfile, getAllProfile, getMyProfile, getProfileByKeyword,}
+export default { createProfile, updateProfile, getAllProfile, getMyProfile, getProfileByKeyword, }

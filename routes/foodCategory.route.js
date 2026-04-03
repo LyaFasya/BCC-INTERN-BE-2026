@@ -33,10 +33,10 @@ router.use(authenticate)
  *             id:
  *               type: integer
  *               example: 1
- *             category_name:
+ *             categoryName:
  *               type: string
  *               example: "Daging"
- *             category_profile:
+ *             categoryProfile:
  *               type: string
  *               example: "https://example.com/image.jpg"
  *     CategoryListResponse:
@@ -52,10 +52,10 @@ router.use(authenticate)
  *               id:
  *                 type: integer
  *                 example: 1
- *               category_name:
+ *               categoryName:
  *                 type: string
  *                 example: "Daging"
- *               category_profile:
+ *               categoryProfile:
  *                 type: string
  *                 example: "https://example.com/image.jpg"
  */

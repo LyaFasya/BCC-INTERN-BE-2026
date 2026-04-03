@@ -18,21 +18,68 @@ router.use(auth)
  * @swagger
  * components:
  *   schemas:
- *     MonthlyStatus:
+ *     ConsumedMonthlyStatus:
  *       type: object
  *       properties:
  *         month:
  *           type: string
- *           example: 2026-03
- *         percentage:
+ *         consumed_percentage:
  *           type: number
- *           example: 0.25
- *         count:
+ *         consumed_count:
  *           type: integer
- *           example: 5
- *         total_value:
+ *         total_price:
  *           type: number
- *           example: 50000
+ *     DiscardedMonthlyStatus:
+ *       type: object
+ *       properties:
+ *         month:
+ *           type: string
+ *         discarded_percentage:
+ *           type: number
+ *         discarded_count:
+ *           type: integer
+ *         total_price:
+ *           type: number
+ *     WarningMonthlyStatus:
+ *       type: object
+ *       properties:
+ *         month:
+ *           type: string
+ *         warning_percentage:
+ *           type: number
+ *         warning_count:
+ *           type: integer
+ *         total_price:
+ *           type: number
+ *     ExpiredMonthlyStatus:
+ *       type: object
+ *       properties:
+ *         month:
+ *           type: string
+ *         expired_percentage:
+ *           type: number
+ *         expired_count:
+ *           type: integer
+ *         total_price:
+ *           type: number
+ *     FreshMonthlyStatus:
+ *       type: object
+ *       properties:
+ *         month:
+ *           type: string
+ *         fresh_percentage:
+ *           type: number
+ *         fresh_count:
+ *           type: integer
+ *         total_price:
+ *           type: number
+ *     BaseListResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
  *     FoodStatusListResponse:
  *       type: object
  *       properties:
@@ -43,7 +90,7 @@ router.use(auth)
  *         data:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/MonthlyStatus'
+ *             type: object
  */
 
 /**
@@ -60,7 +107,13 @@ router.use(auth)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/BaseListResponse'
+ *                 - properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/ConsumedMonthlyStatus'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -96,7 +149,13 @@ router.get("/consumed", foodStatusController.getConsumedStatusPerMonth)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/BaseListResponse'
+ *                 - properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/DiscardedMonthlyStatus'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -132,7 +191,13 @@ router.get("/discarded", foodStatusController.getDiscardedStatusPerMonth)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/BaseListResponse'
+ *                 - properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/WarningMonthlyStatus'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -168,7 +233,13 @@ router.get("/warning", foodStatusController.getWarningStatusPerMonth)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/BaseListResponse'
+ *                 - properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/ExpiredMonthlyStatus'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -204,7 +275,13 @@ router.get("/expired", foodStatusController.getExpiredStatusPerMonth)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FoodStatusListResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/BaseListResponse'
+ *                 - properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/FreshMonthlyStatus'
  *       401:
  *         description: Unauthorized
  *         content:
